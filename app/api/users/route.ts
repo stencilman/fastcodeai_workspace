@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { users } from "@/lib/data/users";
+import { users } from "@/data/users";
 import { UserRole } from "@/models/user";
 
 export async function GET(_request: NextRequest) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDocumentById, updateDocumentStatus } from "@/lib/data/documents";
+import { getDocumentById, updateDocumentStatus } from "@/data/documents";
 import { DocumentStatus } from "@/models/document";
 
 export async function POST(

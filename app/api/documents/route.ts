@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { documents } from "@/lib/data/documents";
+import { documents } from "@/data/documents";
 
 export async function GET(request: NextRequest) {
     // Get userId from query params if provided

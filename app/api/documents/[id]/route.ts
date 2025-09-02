@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDocumentById } from "@/lib/data/documents";
+import { getDocumentById } from "@/data/documents";
 
 export async function GET(
     _request: NextRequest,
