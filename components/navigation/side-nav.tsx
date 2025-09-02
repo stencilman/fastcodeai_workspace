@@ -3,7 +3,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Home, Users, FileText, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Home,
+  Users,
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  IndianRupee,
+  User,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -19,6 +28,7 @@ type Route = {
   label: string;
   href: string;
   icon: LucideIcon;
+  external?: boolean;
 };
 
 export default function SideNav({
@@ -86,6 +96,22 @@ export default function SideNav({
       href: "/user/documents",
       icon: FileText,
     },
+    {
+      label: "Profile",
+      href: "/user/profile",
+      icon: User,
+    },
+    {
+      label: "Office Entry",
+      href: "/user/office-entry",
+      icon: FileText,
+    },
+    {
+      label: "Expense Tracker",
+      href: "https://expense.fastcode.ai",
+      icon: IndianRupee,
+      external: true,
+    },
   ];
 
   const routes = isAdmin ? adminRoutes : candidateRoutes;
@@ -107,7 +133,7 @@ export default function SideNav({
 
       {/* Side navigation */}
       <nav className="flex flex-col space-y-1 overflow-hidden">
-        {routes.map(({ label, href, icon: Icon }) => (
+        {routes.map(({ label, href, icon: Icon, external }) => (
           <Link
             key={href}
             href={href}
@@ -123,9 +149,14 @@ export default function SideNav({
                 setMobileOpen(false);
               }
             }}
+            target={external ? "_blank" : undefined}
+            rel={external ? "noopener noreferrer" : undefined}
           >
             <Icon className="h-4 w-4 flex-shrink-0" />
             {!isCollapsed && <span className="truncate">{label}</span>}
+            {!isCollapsed && external && (
+              <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
+            )}
           </Link>
         ))}
       </nav>
