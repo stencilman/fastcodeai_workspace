@@ -46,7 +46,8 @@ export default function UserDocumentsPage() {
   // Filter documents based on active tab
   const filteredDocuments = documents?.filter((doc: Document) => {
     if (activeTab === "all") return true;
-    if (activeTab === "pending") return doc.status === DocumentStatus.PENDING;
+    if (activeTab === "pending_approval")
+      return doc.status === DocumentStatus.PENDING;
     if (activeTab === "approved") return doc.status === DocumentStatus.APPROVED;
     if (activeTab === "rejected") return doc.status === DocumentStatus.REJECTED;
     return true;
@@ -130,7 +131,7 @@ export default function UserDocumentsPage() {
       </div>
 
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-4 w-full mb-4 bg-primary/10">
+        <TabsList className="grid grid-cols-5 w-full mb-4 bg-primary/10">
           <TabsTrigger
             value="all"
             className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary"
@@ -138,10 +139,16 @@ export default function UserDocumentsPage() {
             All
           </TabsTrigger>
           <TabsTrigger
-            value="pending"
+            value="pending_submission"
             className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary"
           >
-            Pending
+            Pending Submission
+          </TabsTrigger>
+          <TabsTrigger
+            value="pending_approval"
+            className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary"
+          >
+            Pending Approval
           </TabsTrigger>
           <TabsTrigger
             value="approved"
@@ -176,7 +183,31 @@ export default function UserDocumentsPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="pending" className="mt-6">
+        <TabsContent value="pending_submission" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Show only documents that need to be uploaded */}
+            {missingDocTypes.length > 0 ? (
+              missingDocTypes.map((docType) => (
+                <DocumentCard
+                  key={docType}
+                  docType={docType}
+                  onClick={() => openUploadDrawer(docType)}
+                  isUploading={isUploading && selectedDocType === docType}
+                />
+              ))
+            ) : (
+              <div className="text-center p-8 border rounded-md bg-slate-50 col-span-2">
+                <FileText className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                <h3 className="font-medium text-lg">No pending submissions</h3>
+                <p className="text-muted-foreground mt-1">
+                  All required documents have been submitted.
+                </p>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="pending_approval" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Group documents by type and show only the latest one */}
             {(() => {
