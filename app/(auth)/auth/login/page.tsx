@@ -4,25 +4,84 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FaGoogle } from "react-icons/fa";
-import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useSearchParams, useRouter } from "next/navigation";
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
+  const [networkError, setNetworkError] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
   const error = searchParams.get("error");
+  const { status } = useSession();
+  const router = useRouter();
+
+  // Handle error parameter in URL
+  useEffect(() => {
+    if (error) {
+      if (error === "Configuration") {
+        setNetworkError(
+          "Unable to connect to authentication service. Please check your internet connection."
+        );
+      } else if (error === "OAuthAccountNotLinked") {
+        setNetworkError("Email already in use with a different provider.");
+      } else {
+        setNetworkError("Authentication failed. Please try again.");
+      }
+    }
+  }, [error]);
+
+  // Keep loading state active during authentication and redirection
+  useEffect(() => {
+    if (isLoading && status === "authenticated") {
+      // User is authenticated, but we'll keep the loading state
+      // The redirection will happen automatically via middleware
+    }
+  }, [isLoading, status, router]);
+
+  // Check for internet connection
+  const checkInternetConnection = (): boolean => {
+    return navigator.onLine;
+  };
 
   const handleGoogleLogin = async () => {
+    setNetworkError(null);
     setIsLoading(true);
+
+    // Check for internet connection first
+    if (!checkInternetConnection()) {
+      setNetworkError(
+        "No internet connection. Please check your network and try again."
+      );
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      await signIn("google", {
+      const result = await signIn("google", {
         callbackUrl: callbackUrl || "/user/dashboard",
+        redirect: false, // Don't automatically redirect to handle errors
       });
+
+      if (result?.error) {
+        // Handle specific NextAuth errors
+        if (result.error === "Configuration") {
+          setNetworkError(
+            "Unable to connect to authentication service. Please check your internet connection."
+          );
+        } else {
+          setNetworkError("Authentication failed. Please try again.");
+        }
+        setIsLoading(false);
+      } else if (result?.url) {
+        // Successful authentication, manually redirect
+        router.push(result.url);
+        // Keep loading state true for better UX
+      }
     } catch (error) {
       console.error("Google login error:", error);
-    } finally {
+      setNetworkError("An unexpected error occurred. Please try again.");
       setIsLoading(false);
     }
   };
@@ -46,10 +105,10 @@ export default function Login() {
             />
           </div>
 
-          {error && (
+          {(error || networkError) && (
             <div className="bg-red-100 p-3 rounded-md text-sm text-red-600 w-full">
-              {error === "OAuthAccountNotLinked"
-                ? "Email already in use with a different provider."
+              {networkError
+                ? networkError
                 : "Something went wrong. Please try again."}
             </div>
           )}
@@ -65,7 +124,7 @@ export default function Login() {
             ) : (
               <FaGoogle className="h-5 w-5" />
             )}
-            <span>Login with Google</span>
+            <span>{isLoading ? "Logging in..." : "Login with Google"}</span>
           </Button>
         </CardContent>
       </Card>

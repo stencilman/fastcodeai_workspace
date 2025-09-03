@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { UserRole } from "@prisma/client";
-import { Loading } from "@/components/ui/loading";
+import { DashboardSkeleton } from "@/components/ui/dashboard-skeleton";
 
 export default function Home() {
   const router = useRouter();
@@ -27,9 +27,5 @@ export default function Home() {
   }, [router, session, status]);
 
   // Show loading state while checking authentication
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <Loading size="lg" variant="primary" text="Loading..." />
-    </div>
-  );
+  return <DashboardSkeleton />;
 }
