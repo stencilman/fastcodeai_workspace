@@ -79,6 +79,27 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
+        // Find and delete any existing documents of the same type for this user
+        const existingDocuments = await db.document.findMany({
+            where: {
+                userId: user.id,
+                type: docType as DocumentType
+            }
+        });
+
+        // Delete existing documents from S3 and database
+        if (existingDocuments.length > 0) {
+            for (const doc of existingDocuments) {
+                // Delete from S3
+                await s3Service.deleteFile(doc.s3Key);
+
+                // Delete from database
+                await db.document.delete({
+                    where: { id: doc.id }
+                });
+            }
+        }
+
         // Generate S3 key
         const s3Key = s3Service.generateS3Key(user.id, docType, fileName);
 

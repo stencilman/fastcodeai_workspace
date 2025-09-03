@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { DocumentType, DocumentStatus } from "@/models/document";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -20,8 +21,9 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
+  Eye,
+  HelpCircle,
 } from "lucide-react";
-import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { requiredDocuments } from "./file-upload-drawer";
 import { getDocumentUrl } from "@/lib/document-upload-service";
@@ -43,23 +45,46 @@ interface DocumentCardProps {
   };
   docType: DocumentType;
   onClick: () => void;
+  isUploading?: boolean;
 }
 
 export function DocumentCard({
   document,
   docType,
   onClick,
+  isUploading = false,
 }: DocumentCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [pdfError, setPdfError] = useState(false);
   const [documentUrl, setDocumentUrl] = useState<string | null>(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
 
   // Get document details from type
   const docDetails = requiredDocuments.find((doc) => doc.type === docType);
   const isUploaded = !!document;
 
-  // Fetch document URL when needed
+  // Determine file type
+  const isPdf = document?.fileName?.toLowerCase().endsWith(".pdf") || false;
+  const isImage =
+    document?.fileName?.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
+    false;
+  const documentName = document?.fileName || docDetails?.label || "Document";
+
+  // Fetch thumbnail URL for image documents
+  useEffect(() => {
+    if (document?.id && isImage) {
+      getDocumentUrl(document.id)
+        .then((url) => {
+          setThumbnailUrl(url);
+        })
+        .catch((error) => {
+          console.error("Error fetching thumbnail URL:", error);
+        });
+    }
+  }, [document?.id, isImage]);
+
+  // Fetch document URL when needed for dialog preview only
   useEffect(() => {
     if (document?.id && dialogOpen) {
       setDocumentUrl(null);
@@ -76,18 +101,42 @@ export function DocumentCard({
 
   // Get appropriate icon based on document type
   const getDocumentIcon = () => {
-    switch (docType) {
-      case DocumentType.PAN_CARD:
-        return <CreditCard className="h-12 w-12 text-blue-500" />;
-      case DocumentType.AADHAR_CARD:
-        return <FileImage className="h-12 w-12 text-green-500" />;
-      case DocumentType.CANCELLED_CHEQUE:
-        return <FileCheck className="h-12 w-12 text-amber-500" />;
-      case DocumentType.OFFER_LETTER:
-        return <FileText className="h-12 w-12 text-purple-500" />;
-      default:
-        return <FileText className="h-12 w-12 text-gray-500" />;
+    // If no document, show question mark
+    if (!document) {
+      return <HelpCircle className="h-12 w-12 text-gray-400" />;
     }
+
+    // For image documents, show the image if thumbnail URL is available
+    if (isImage) {
+      if (thumbnailUrl) {
+        return (
+          <div className="w-12 h-12 overflow-hidden rounded-md">
+            <img
+              src={thumbnailUrl}
+              alt={document.fileName}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        );
+      } else {
+        // Show loading indicator while fetching the image
+        return (
+          <div className="h-12 w-12 flex items-center justify-center">
+            <Loading size="sm" variant="primary" />
+          </div>
+        );
+      }
+    }
+
+    // For any other document type (PDF, etc)
+    return (
+      <div className="relative">
+        <FileText className="h-12 w-12 text-gray-500" />
+        <div className="absolute -bottom-1 -right-1 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+          <Eye className="h-3 w-3" />
+        </div>
+      </div>
+    );
   };
 
   // Get status badge color
@@ -174,9 +223,6 @@ export function DocumentCard({
     }
   };
 
-  const isPdf = document?.fileName?.toLowerCase().endsWith(".pdf") || false;
-  const documentName = document?.fileName || docDetails?.label || "Document";
-
   return (
     <>
       <Card
@@ -198,22 +244,18 @@ export function DocumentCard({
               }
             }}
           >
-            {getDocumentIcon()}
+            {isUploading ? (
+              <div className="h-12 w-12 flex items-center justify-center">
+                <Loading size="sm" variant="primary" />
+              </div>
+            ) : (
+              getDocumentIcon()
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
               {docDetails && (
-                <Badge
-                  className={cn(
-                    "bg-blue-100 text-blue-800 hover:bg-blue-100",
-                    docType === DocumentType.AADHAR_CARD &&
-                      "bg-green-100 text-green-800 hover:bg-green-100",
-                    docType === DocumentType.CANCELLED_CHEQUE &&
-                      "bg-amber-100 text-amber-800 hover:bg-amber-100",
-                    docType === DocumentType.OFFER_LETTER &&
-                      "bg-purple-100 text-purple-800 hover:bg-purple-100"
-                  )}
-                >
+                <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
                   {docDetails.label}
                 </Badge>
               )}
@@ -250,15 +292,15 @@ export function DocumentCard({
             <DialogHeader>
               <DialogTitle className="flex items-center justify-between pr-8">
                 <span className="truncate mr-4">{documentName}</span>
-                {isPdf && (
+                {documentUrl && (
                   <a
-                    href={documentUrl || ""}
+                    href={documentUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 whitespace-nowrap"
                   >
                     <Download className="h-4 w-4 mr-1" />
-                    Download PDF
+                    Download {isPdf ? "PDF" : "Image"}
                   </a>
                 )}
               </DialogTitle>
@@ -290,15 +332,15 @@ export function DocumentCard({
                   </div>
                 ) : (
                   <iframe
-                    src={documentUrl || ""}
+                    src={documentUrl || undefined}
                     className="w-full h-full border-0"
                     onLoad={handleLoad}
                     onError={handleError}
-                  />
+                  ></iframe>
                 )
               ) : (
                 <img
-                  src={documentUrl || ""}
+                  src={documentUrl || undefined}
                   alt={documentName}
                   className="w-full h-full object-contain"
                   onLoad={handleLoad}

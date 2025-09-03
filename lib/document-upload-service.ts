@@ -29,17 +29,34 @@ export async function initiateDocumentUpload(
 }
 
 export async function uploadFileToS3(file: File, uploadUrl: string): Promise<void> {
-    // Upload file directly to S3 using the presigned URL
-    const uploadResponse = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-            'Content-Type': file.type,
-        },
-    });
+    // Check if this is a local upload URL (starts with /api/)
+    if (uploadUrl.startsWith('/api/')) {
+        // Local file upload to our API endpoint
+        const formData = new FormData();
+        formData.append('file', file);
 
-    if (!uploadResponse.ok) {
-        throw new Error('Failed to upload file to S3');
+        const uploadResponse = await fetch(uploadUrl, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!uploadResponse.ok) {
+            const error = await uploadResponse.json();
+            throw new Error(error.error || 'Failed to upload file');
+        }
+    } else {
+        // S3 direct upload using presigned URL
+        const uploadResponse = await fetch(uploadUrl, {
+            method: 'PUT',
+            body: file,
+            headers: {
+                'Content-Type': file.type,
+            },
+        });
+
+        if (!uploadResponse.ok) {
+            throw new Error('Failed to upload file to S3');
+        }
     }
 }
 

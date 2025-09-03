@@ -23,10 +23,6 @@ import {
 } from "@/components/ui/select";
 import { FileText, Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  initiateDocumentUpload,
-  uploadFileToS3,
-} from "@/lib/document-upload-service";
 import { toast } from "sonner";
 
 // Define required document types
@@ -129,25 +125,13 @@ export function FileUploadDrawer({
     try {
       setIsUploading(true);
 
-      // Step 1: Create document record and get upload URL
-      const { documentId, uploadUrl } = await initiateDocumentUpload(
-        file,
-        selectedDocType
-      );
+      // Call the parent's onUpload callback to handle the actual upload
+      await onUpload(file, selectedDocType);
 
-      // Step 2: Upload file to S3
-      await uploadFileToS3(file, uploadUrl);
-
-      // Step 3: Call the parent's onUpload callback
-      onUpload(file, selectedDocType);
-
-      // Reset state and close drawer
+      // Reset state
       setFile(null);
-      onOpenChange(false);
 
-      toast.success("Document uploaded successfully", {
-        description: "Your document has been uploaded and is pending review.",
-      });
+      // Toast notification is now handled by the parent component
     } catch (error) {
       console.error("Upload error:", error);
       toast.error("Upload failed", {

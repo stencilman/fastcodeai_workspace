@@ -11,68 +11,12 @@ import {
   FileUploadDrawer,
   requiredDocuments,
 } from "@/components/user/file-upload-drawer";
-
-// Mock function to fetch documents - would be replaced with actual API call
-const fetchUserDocuments = async (): Promise<Document[]> => {
-  // This would be an API call in a real implementation
-  // For now, we'll just return mock data
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        {
-          id: "1",
-          userId: "user-1",
-          type: DocumentType.PAN_CARD,
-          fileName: "pan-card.pdf",
-          fileSize: 1024 * 1024, // 1MB
-          fileType: "application/pdf",
-          s3Key: "documents/pan-1.pdf",
-          status: DocumentStatus.APPROVED,
-          uploadedAt: new Date(2025, 8, 1),
-          reviewedBy: "admin-1",
-          reviewedAt: new Date(2025, 8, 2),
-        },
-        {
-          id: "2",
-          userId: "user-1",
-          type: DocumentType.AADHAR_CARD,
-          fileName: "aadhar-card.pdf",
-          fileSize: 2 * 1024 * 1024, // 2MB
-          fileType: "application/pdf",
-          s3Key: "documents/aadhar-1.pdf",
-          status: DocumentStatus.PENDING,
-          uploadedAt: new Date(2025, 8, 1),
-        },
-      ]);
-    }, 500);
-  });
-};
-
-// Mock function to upload a document - would be replaced with actual API call
-const uploadDocument = async (
-  file: File,
-  docType: DocumentType
-): Promise<Document> => {
-  // This would be an API call in a real implementation
-  console.log(`Uploading ${file.name} as ${docType}`);
-
-  // Simulate API delay
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        id: Math.random().toString(36).substring(2, 9),
-        userId: "user-1",
-        type: docType,
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-        s3Key: `documents/${file.name}`,
-        status: DocumentStatus.PENDING,
-        uploadedAt: new Date(),
-      });
-    }, 1000);
-  });
-};
+import {
+  getUserDocuments,
+  initiateDocumentUpload,
+  uploadFileToS3,
+} from "@/lib/document-upload-service";
+import { toast } from "sonner";
 
 export default function UserDocumentsPage() {
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -88,11 +32,11 @@ export default function UserDocumentsPage() {
     refetch,
   } = useQuery({
     queryKey: ["userDocuments"],
-    queryFn: fetchUserDocuments,
+    queryFn: getUserDocuments,
   });
 
   // Get uploaded document types
-  const uploadedDocTypes = documents?.map((doc) => doc.type) || [];
+  const uploadedDocTypes = documents?.map((doc: Document) => doc.type) || [];
 
   // Get missing document types
   const missingDocTypes = requiredDocuments
@@ -100,7 +44,7 @@ export default function UserDocumentsPage() {
     .filter((type) => !uploadedDocTypes.includes(type));
 
   // Filter documents based on active tab
-  const filteredDocuments = documents?.filter((doc) => {
+  const filteredDocuments = documents?.filter((doc: Document) => {
     if (activeTab === "all") return true;
     if (activeTab === "pending") return doc.status === DocumentStatus.PENDING;
     if (activeTab === "approved") return doc.status === DocumentStatus.APPROVED;
@@ -132,11 +76,30 @@ export default function UserDocumentsPage() {
   const handleUpload = async (file: File, docType: DocumentType) => {
     try {
       setIsUploading(true);
-      await uploadDocument(file, docType);
+
+      // Step 1: Create document record and get upload URL
+      const { documentId, uploadUrl } = await initiateDocumentUpload(
+        file,
+        docType
+      );
+
+      // Step 2: Upload file to S3 or local storage
+      await uploadFileToS3(file, uploadUrl);
+
+      // Step 3: Refresh the documents list
       await refetch();
       setDrawerOpen(false);
+
+      // Show success notification
+      toast.success("Document uploaded successfully", {
+        description: "Your document has been uploaded and is pending review.",
+      });
     } catch (error) {
       console.error("Error uploading document:", error);
+      toast.error("Upload failed", {
+        description:
+          error instanceof Error ? error.message : "Failed to upload document",
+      });
     } finally {
       setIsUploading(false);
     }
@@ -144,7 +107,7 @@ export default function UserDocumentsPage() {
 
   // Find document by type
   const findDocumentByType = (type: DocumentType) => {
-    return documents?.find((doc) => doc.type === type);
+    return documents?.find((doc: Document) => doc.type === type);
   };
 
   if (isLoading) {
@@ -215,24 +178,47 @@ export default function UserDocumentsPage() {
 
         <TabsContent value="pending" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Show pending documents */}
-            {filteredDocuments && filteredDocuments.length > 0
-              ? filteredDocuments.map((doc) => (
+            {/* Group documents by type and show only the latest one */}
+            {(() => {
+              // Create a map to store the latest document of each type
+              const latestDocsByType = new Map<DocumentType, Document>();
+
+              // Find the latest document for each type
+              filteredDocuments?.forEach((doc: Document) => {
+                const existingDoc = latestDocsByType.get(doc.type);
+                if (
+                  !existingDoc ||
+                  new Date(doc.uploadedAt) > new Date(existingDoc.uploadedAt)
+                ) {
+                  latestDocsByType.set(doc.type, doc);
+                }
+              });
+
+              // Convert map to array
+              const uniqueDocs = Array.from(latestDocsByType.values());
+
+              if (uniqueDocs.length > 0) {
+                return uniqueDocs.map((doc: Document) => (
                   <DocumentCard
                     key={doc.id}
                     docType={doc.type}
                     document={doc}
                     onClick={() => handleDocumentCardClick(doc, doc.type)}
+                    isUploading={isUploading && selectedDocType === doc.type}
                   />
-                ))
-              : // Show missing documents that need to be uploaded
-                missingDocTypes.map((docType) => (
+                ));
+              } else {
+                // Show missing documents that need to be uploaded
+                return missingDocTypes.map((docType) => (
                   <DocumentCard
                     key={docType}
                     docType={docType}
                     onClick={() => openUploadDrawer(docType)}
+                    isUploading={isUploading && selectedDocType === docType}
                   />
-                ))}
+                ));
+              }
+            })()}
           </div>
 
           {filteredDocuments?.length === 0 && missingDocTypes.length === 0 && (
@@ -249,7 +235,7 @@ export default function UserDocumentsPage() {
         <TabsContent value="approved" className="mt-6">
           {filteredDocuments && filteredDocuments.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredDocuments.map((doc) => (
+              {filteredDocuments.map((doc: Document) => (
                 <DocumentCard
                   key={doc.id}
                   docType={doc.type}
@@ -272,7 +258,7 @@ export default function UserDocumentsPage() {
         <TabsContent value="rejected" className="mt-6">
           {filteredDocuments && filteredDocuments.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredDocuments.map((doc) => (
+              {filteredDocuments.map((doc: Document) => (
                 <DocumentCard
                   key={doc.id}
                   docType={doc.type}
