@@ -41,7 +41,7 @@ const formSchema = z.object({
     .url({ message: "Please enter a valid LinkedIn URL." })
     .optional()
     .or(z.literal("")),
-  bloodGroup: z.nativeEnum(BloodGroup).optional(),
+  bloodGroup: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -50,28 +50,78 @@ interface ProfileDetailsFormProps {
   userData: User;
 }
 
-// Mock function to update user data
-const updateUserProfile = async (data: FormValues): Promise<User> => {
-  // This would be an API call in a real implementation
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        ...data,
-      } as User);
-    }, 1000);
+// Function to update user profile via API
+const updateUserProfile = async (
+  userId: string,
+  data: FormValues
+): Promise<User> => {
+  // Convert A+ format to A_POSITIVE format for the API
+  let apiData = { ...data };
+
+  if (apiData.bloodGroup) {
+    // Map the display value to the enum value expected by the API
+    const bloodGroupMapping: Record<string, BloodGroup> = {
+      "A+": BloodGroup.A_POSITIVE,
+      "A-": BloodGroup.A_NEGATIVE,
+      "B+": BloodGroup.B_POSITIVE,
+      "B-": BloodGroup.B_NEGATIVE,
+      "AB+": BloodGroup.AB_POSITIVE,
+      "AB-": BloodGroup.AB_NEGATIVE,
+      "O+": BloodGroup.O_POSITIVE,
+      "O-": BloodGroup.O_NEGATIVE,
+    };
+
+    apiData.bloodGroup =
+      bloodGroupMapping[apiData.bloodGroup] || apiData.bloodGroup;
+  }
+
+  const response = await fetch(`/api/users/${userId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(apiData),
   });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to update profile");
+  }
+
+  return response.json();
 };
 
 export function ProfileDetailsForm({ userData }: ProfileDetailsFormProps) {
   const [formChanged, setFormChanged] = useState(false);
   const queryClient = useQueryClient();
 
+  // Convert database enum values to display values
+  const getDisplayBloodGroup = (
+    bloodGroup?: BloodGroup
+  ): string | undefined => {
+    if (!bloodGroup) return undefined;
+
+    // Map database enum values to display values
+    const bloodGroupMapping: Record<string, string> = {
+      A_POSITIVE: "A+",
+      A_NEGATIVE: "A-",
+      B_POSITIVE: "B+",
+      B_NEGATIVE: "B-",
+      AB_POSITIVE: "AB+",
+      AB_NEGATIVE: "AB-",
+      O_POSITIVE: "O+",
+      O_NEGATIVE: "O-",
+    };
+
+    return bloodGroupMapping[bloodGroup as string] || undefined;
+  };
+
   // Initialize form with user data
   const defaultValues = {
     phone: userData.phone || "",
     address: userData.address || "",
     linkedinProfile: userData.linkedinProfile || "",
-    bloodGroup: userData.bloodGroup,
+    bloodGroup: getDisplayBloodGroup(userData.bloodGroup),
   };
 
   const form = useForm<FormValues>({
@@ -81,10 +131,10 @@ export function ProfileDetailsForm({ userData }: ProfileDetailsFormProps) {
 
   // Setup mutation with TanStack Query
   const { mutate, isPending } = useMutation({
-    mutationFn: updateUserProfile,
+    mutationFn: (values: FormValues) => updateUserProfile(userData.id, values),
     onSuccess: () => {
       // Invalidate and refetch the user data query
-      queryClient.invalidateQueries({ queryKey: ["userData"] });
+      queryClient.invalidateQueries({ queryKey: ["userData", userData.id] });
 
       toast.success("Profile updated", {
         description: "Your profile details have been updated successfully.",
@@ -96,7 +146,10 @@ export function ProfileDetailsForm({ userData }: ProfileDetailsFormProps) {
     onError: (error) => {
       console.error("Error updating profile:", error);
       toast.error("Error", {
-        description: "Failed to update profile. Please try again.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to update profile. Please try again.",
       });
     },
   });
@@ -151,7 +204,7 @@ export function ProfileDetailsForm({ userData }: ProfileDetailsFormProps) {
                 <FormLabel>Blood Group</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value || ""}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -159,11 +212,13 @@ export function ProfileDetailsForm({ userData }: ProfileDetailsFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {Object.values(BloodGroup).map((group) => (
-                      <SelectItem key={group} value={group}>
-                        {group}
-                      </SelectItem>
-                    ))}
+                    {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
+                      (group) => (
+                        <SelectItem key={group} value={group}>
+                          {group}
+                        </SelectItem>
+                      )
+                    )}
                   </SelectContent>
                 </Select>
                 <FormDescription>

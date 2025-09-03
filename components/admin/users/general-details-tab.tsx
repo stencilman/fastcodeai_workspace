@@ -2,7 +2,9 @@ import React from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, ExternalLink } from "lucide-react";
+import { FaLinkedin, FaSlack } from "react-icons/fa6";
+import { getDisplayBloodGroup } from "@/lib/utils";
 
 export function GeneralDetailsTab() {
   const params = useParams();
@@ -22,6 +24,31 @@ export function GeneralDetailsTab() {
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return "N/A";
     return dateString.split("T")[0];
+  };
+
+  const extractLinkedInUsername = (url: string): string => {
+    try {
+      // Handle different LinkedIn URL formats
+      if (url.includes("linkedin.com/in/")) {
+        // Extract username from linkedin.com/in/username
+        const username = url
+          .split("linkedin.com/in/")[1]
+          .split("/")[0]
+          .split("?")[0];
+        return username;
+      } else if (url.includes("linkedin.com/company/")) {
+        // Extract company name from linkedin.com/company/company-name
+        const companyName = url
+          .split("linkedin.com/company/")[1]
+          .split("/")[0]
+          .split("?")[0];
+        return companyName;
+      }
+      // If we can't parse it, just return the URL
+      return url;
+    } catch (error) {
+      return url;
+    }
   };
 
   if (isLoading) {
@@ -66,9 +93,51 @@ export function GeneralDetailsTab() {
           </div>
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">
-              Slack Status
+              Blood Group
             </h3>
-            <p>{user?.slackUserId ? "Connected" : "Not Invited"}</p>
+            <p>{getDisplayBloodGroup(user?.bloodGroup) || "Not provided"}</p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground">
+              Slack ID
+            </h3>
+            {user?.slackUserId ? (
+              <div className="flex items-center gap-1">
+                <FaSlack className="h-4 w-4 text-[#4A154B]" />
+                <a
+                  href={`https://fastcodeai.slack.com/team/${user.slackUserId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline flex items-center gap-1"
+                >
+                  {user.slackUserId}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            ) : (
+              <p>Not provided</p>
+            )}
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground">
+              LinkedIn Profile
+            </h3>
+            {user?.linkedinProfile ? (
+              <div className="flex items-center gap-1">
+                <FaLinkedin className="h-4 w-4 text-[#0A66C2]" />
+                <a
+                  href={user.linkedinProfile}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline flex items-center gap-1"
+                >
+                  {extractLinkedInUsername(user.linkedinProfile)}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            ) : (
+              <p>Not provided</p>
+            )}
           </div>
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">

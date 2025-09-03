@@ -23,6 +23,11 @@ import {
 } from "@/components/ui/select";
 import { FileText, Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  initiateDocumentUpload,
+  uploadFileToS3,
+} from "@/lib/document-upload-service";
+import { toast } from "sonner";
 
 // Define required document types
 export const requiredDocuments = [
@@ -69,6 +74,7 @@ export function FileUploadDrawer({
 }: FileUploadDrawerProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get document details by type
@@ -117,10 +123,40 @@ export function FileUploadDrawer({
   };
 
   // Handle upload button click
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!file || !selectedDocType) return;
-    onUpload(file, selectedDocType);
-    setFile(null);
+
+    try {
+      setIsUploading(true);
+
+      // Step 1: Create document record and get upload URL
+      const { documentId, uploadUrl } = await initiateDocumentUpload(
+        file,
+        selectedDocType
+      );
+
+      // Step 2: Upload file to S3
+      await uploadFileToS3(file, uploadUrl);
+
+      // Step 3: Call the parent's onUpload callback
+      onUpload(file, selectedDocType);
+
+      // Reset state and close drawer
+      setFile(null);
+      onOpenChange(false);
+
+      toast.success("Document uploaded successfully", {
+        description: "Your document has been uploaded and is pending review.",
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Upload failed", {
+        description:
+          error instanceof Error ? error.message : "Failed to upload document",
+      });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // Handle file removal
@@ -253,8 +289,11 @@ export function FileUploadDrawer({
           </div>
         </div>
         <DrawerFooter>
-          <Button onClick={handleUpload} disabled={!file || !selectedDocType}>
-            Upload Document
+          <Button
+            onClick={handleUpload}
+            disabled={!file || !selectedDocType || isUploading}
+          >
+            {isUploading ? "Uploading..." : "Upload Document"}
           </Button>
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>

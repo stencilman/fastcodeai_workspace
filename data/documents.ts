@@ -1,74 +1,122 @@
 import { Document, DocumentStatus, DocumentType } from "@/models/document";
+import { db } from "@/lib/db";
 
-// Sample document data with URLs to external images/PDFs
-export const documents: Document[] = [
-    {
-        id: "doc1",
-        userId: "1", // John Doe
-        type: DocumentType.PAN_CARD,
-        s3Key: "https://picsum.photos/id/1018/800/600", // Random image from Lorem Picsum
-        status: DocumentStatus.PENDING,
-        uploadedAt: new Date("2025-08-15"),
-    },
-    {
-        id: "doc2",
-        userId: "1", // John Doe
-        type: DocumentType.AADHAR_CARD,
-        s3Key: "https://picsum.photos/id/1015/800/600",
-        status: DocumentStatus.APPROVED,
-        uploadedAt: new Date("2025-08-10"),
-        reviewedBy: "3", // Admin User
-        reviewedAt: new Date("2025-08-12"),
-    },
-    {
-        id: "doc3",
-        userId: "2", // Jane Smith
-        type: DocumentType.CANCELLED_CHEQUE,
-        s3Key: "https://picsum.photos/id/1019/800/600",
-        status: DocumentStatus.REJECTED,
-        uploadedAt: new Date("2025-08-05"),
-        reviewedBy: "3", // Admin User
-        reviewedAt: new Date("2025-08-07"),
-        notes: "Image is not clear, please upload a better quality image",
-    },
-    {
-        id: "doc4",
-        userId: "2", // Jane Smith
-        type: DocumentType.OFFER_LETTER,
-        s3Key: "https://www.fsa.usda.gov/Internet/FSA_File/tech_assist.pdf", // Sample PDF
-        status: DocumentStatus.PENDING,
-        uploadedAt: new Date("2025-08-18"),
-    },
-];
-
-// Helper function to get documents by user ID
-export function getDocumentsByUserId(userId: string): Document[] {
-    return documents.filter(doc => doc.userId === userId);
+// Get all documents for a user
+export async function getUserDocuments(userId: string) {
+    try {
+        const documents = await db.document.findMany({
+            where: { userId },
+            orderBy: { uploadedAt: 'desc' },
+        });
+        return documents;
+    } catch (error) {
+        console.error("Error fetching user documents:", error);
+        throw error;
+    }
 }
 
-// Helper function to get a document by ID
-export function getDocumentById(id: string): Document | undefined {
-    return documents.find(doc => doc.id === id);
+// Get a document by ID
+export async function getDocumentById(id: string) {
+    try {
+        const document = await db.document.findUnique({
+            where: { id },
+        });
+        return document;
+    } catch (error) {
+        console.error("Error fetching document by ID:", error);
+        throw error;
+    }
 }
 
-// Helper function to update document status
-export function updateDocumentStatus(
+// Create a new document
+export async function createDocument(data: {
+    userId: string;
+    type: DocumentType;
+    fileName: string;
+    fileSize: number;
+    fileType: string;
+    s3Key: string;
+}) {
+    try {
+        const document = await db.document.create({
+            data: {
+                ...data,
+                status: DocumentStatus.PENDING,
+                uploadedAt: new Date(),
+            },
+        });
+        return document;
+    } catch (error) {
+        console.error("Error creating document:", error);
+        throw error;
+    }
+}
+
+// Update document status (for admin review)
+export async function updateDocumentStatus(
     id: string,
     status: DocumentStatus,
     reviewerId: string,
     notes?: string
-): Document | null {
-    const docIndex = documents.findIndex(doc => doc.id === id);
+) {
+    try {
+        const document = await db.document.update({
+            where: { id },
+            data: {
+                status,
+                reviewedBy: reviewerId,
+                reviewedAt: new Date(),
+                notes,
+            },
+        });
+        return document;
+    } catch (error) {
+        console.error("Error updating document status:", error);
+        throw error;
+    }
+}
 
-    if (docIndex === -1) return null;
+// Delete a document
+export async function deleteDocument(id: string) {
+    try {
+        const document = await db.document.delete({
+            where: { id },
+        });
+        return document;
+    } catch (error) {
+        console.error("Error deleting document:", error);
+        throw error;
+    }
+}
 
-    documents[docIndex] = {
-        ...documents[docIndex],
-        status,
-        reviewedBy: reviewerId,
-        reviewedAt: new Date(),
-        notes: notes || documents[docIndex].notes,
-    };
+// Get documents by type for a user
+export async function getUserDocumentsByType(userId: string, type: DocumentType) {
+    try {
+        const documents = await db.document.findMany({
+            where: {
+                userId,
+                type
+            },
+            orderBy: { uploadedAt: 'desc' },
+        });
+        return documents;
+    } catch (error) {
+        console.error("Error fetching user documents by type:", error);
+        throw error;
+    }
+}
 
-    return documents[docIndex];
+// Get all pending documents (for admin review)
+export async function getPendingDocuments() {
+    try {
+        const documents = await db.document.findMany({
+            where: { status: DocumentStatus.PENDING },
+            orderBy: { uploadedAt: 'asc' },
+            include: { user: true },
+        });
+        return documents;
+    } catch (error) {
+        console.error("Error fetching pending documents:", error);
+        throw error;
+    }
 }

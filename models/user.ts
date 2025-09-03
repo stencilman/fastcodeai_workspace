@@ -1,7 +1,6 @@
 export enum UserRole {
-    CANDIDATE = 'CANDIDATE',
+    USER = 'USER',
     ADMIN = 'ADMIN',
-    EMPLOYEE = 'EMPLOYEE',
 }
 
 export enum BloodGroup {
@@ -19,12 +18,41 @@ export interface User {
     id: string;
     email: string; // company email
     name: string;
-    phone: string;
-    address: string;
+    phone: string; // Not in DB schema, maintained in application layer
+    address: string; // Not in DB schema, maintained in application layer
     role: UserRole;
-    slackUserId?: string; // set once invited
-    linkedinProfile?: string;
-    bloodGroup?: BloodGroup;
+    slackUserId?: string; // Not in DB schema, maintained in application layer
+    linkedinProfile?: string; // Not in DB schema, maintained in application layer
+    bloodGroup?: BloodGroup; // Not in DB schema, maintained in application layer
     createdAt: Date;
     updatedAt: Date;
+
+    // Optional fields from Prisma schema that we don't use in the app layer
+    firstName?: string;
+    lastName?: string;
+    emailVerified?: Date;
+    password?: string;
+    image?: string;
+}
+
+// Type for creating a new user - only includes fields that are in the Prisma schema
+export interface CreateUserInput {
+    name: string;
+    email: string;
+    role?: UserRole;
+    firstName?: string;
+    lastName?: string;
+    password?: string;
+    image?: string;
+}
+
+// Type for updating a user - only includes fields that are in the Prisma schema
+export interface UpdateUserInput {
+    name?: string;
+    email?: string;
+    role?: UserRole;
+    firstName?: string;
+    lastName?: string;
+    password?: string;
+    image?: string;
 }

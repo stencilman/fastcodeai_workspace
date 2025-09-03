@@ -12,6 +12,30 @@ enum UserRole {
   ADMIN
 }
 
+enum BloodGroup {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+}
+
+enum DocumentType {
+  PAN_CARD
+  AADHAR_CARD
+  CANCELLED_CHEQUE
+  OFFER_LETTER
+}
+
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -22,8 +46,16 @@ model User {
   password      String?
   image         String?
   
+  // Additional fields for user profile
+  phone         String?
+  address       String?
+  slackUserId   String?
+  linkedinProfile String?
+  bloodGroup    BloodGroup?
+  
   // Relations
   accounts       Account[]
+  documents      Document[]
 
   // System fields
   role          UserRole  @default(USER)
@@ -50,4 +82,26 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([provider, providerAccountId])
+}
+
+model Document {
+  id          String         @id @default(cuid())
+  userId      String
+  type        DocumentType
+  fileName    String         // Original file name
+  fileSize    Int            // Size in bytes
+  fileType    String         // MIME type
+  s3Key       String         // Path/key in S3 bucket
+  status      DocumentStatus @default(PENDING)
+  uploadedAt  DateTime       @default(now())
+  reviewedBy  String?        // Admin userId who reviewed the document
+  reviewedAt  DateTime?      // When the document was reviewed
+  notes       String?        // Admin notes on document
+  
+  // Relations
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([type])
+  @@index([status])
 }

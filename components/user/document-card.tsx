@@ -1,6 +1,6 @@
 "use client";
 
-import { Document, DocumentStatus, DocumentType } from "@/models/document";
+import { DocumentType, DocumentStatus } from "@/models/document";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
@@ -21,12 +21,26 @@ import {
   CheckCircle,
   Clock,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { requiredDocuments } from "./file-upload-drawer";
+import { getDocumentUrl } from "@/lib/document-upload-service";
 
 interface DocumentCardProps {
-  document?: Document;
+  document?: {
+    id: string;
+    userId: string;
+    type: DocumentType;
+    fileName: string;
+    fileSize: number;
+    fileType: string;
+    s3Key: string;
+    status: DocumentStatus;
+    uploadedAt: Date;
+    reviewedBy?: string;
+    reviewedAt?: Date;
+    notes?: string;
+  };
   docType: DocumentType;
   onClick: () => void;
 }
@@ -39,10 +53,26 @@ export function DocumentCard({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [pdfError, setPdfError] = useState(false);
+  const [documentUrl, setDocumentUrl] = useState<string | null>(null);
 
   // Get document details from type
   const docDetails = requiredDocuments.find((doc) => doc.type === docType);
   const isUploaded = !!document;
+
+  // Fetch document URL when needed
+  useEffect(() => {
+    if (document?.id && dialogOpen) {
+      setDocumentUrl(null);
+      getDocumentUrl(document.id)
+        .then((url) => {
+          setDocumentUrl(url);
+        })
+        .catch((error) => {
+          console.error("Error fetching document URL:", error);
+          setPdfError(true);
+        });
+    }
+  }, [document?.id, dialogOpen]);
 
   // Get appropriate icon based on document type
   const getDocumentIcon = () => {
@@ -123,6 +153,7 @@ export function DocumentCard({
     if (!document) return;
     setDialogOpen(true);
     setIsLoading(true);
+    setPdfError(false);
 
     // Set a timeout to handle PDFs that never trigger onLoad
     if (isPdf) {
@@ -143,9 +174,8 @@ export function DocumentCard({
     }
   };
 
-  const isPdf = document?.s3Key?.toLowerCase().endsWith(".pdf") || false;
-  const documentName =
-    document?.s3Key?.split("/").pop() || docDetails?.label || "Document";
+  const isPdf = document?.fileName?.toLowerCase().endsWith(".pdf") || false;
+  const documentName = document?.fileName || docDetails?.label || "Document";
 
   return (
     <>
@@ -222,7 +252,7 @@ export function DocumentCard({
                 <span className="truncate mr-4">{documentName}</span>
                 {isPdf && (
                   <a
-                    href={document.s3Key}
+                    href={documentUrl || ""}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 whitespace-nowrap"
@@ -246,19 +276,21 @@ export function DocumentCard({
                     <p className="mb-4 text-red-600">
                       Unable to load PDF preview.
                     </p>
-                    <a
-                      href={document.s3Key}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                      <Download className="h-4 w-4" />
-                      Download PDF
-                    </a>
+                    {documentUrl && (
+                      <a
+                        href={documentUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download PDF
+                      </a>
+                    )}
                   </div>
                 ) : (
                   <iframe
-                    src={document.s3Key}
+                    src={documentUrl || ""}
                     className="w-full h-full border-0"
                     onLoad={handleLoad}
                     onError={handleError}
@@ -266,7 +298,7 @@ export function DocumentCard({
                 )
               ) : (
                 <img
-                  src={document.s3Key}
+                  src={documentUrl || ""}
                   alt={documentName}
                   className="w-full h-full object-contain"
                   onLoad={handleLoad}

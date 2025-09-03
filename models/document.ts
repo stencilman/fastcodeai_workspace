@@ -15,6 +15,9 @@ export interface Document {
     id: string;
     userId: string;
     type: DocumentType;
+    fileName: string;
+    fileSize: number;
+    fileType: string;
     s3Key: string; // path/key in S3 bucket
     status: DocumentStatus;
     uploadedAt: Date;

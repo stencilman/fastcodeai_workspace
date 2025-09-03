@@ -1,42 +1,47 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, UserRole } from "@/models/user";
+import { User } from "@/models/user";
 import { Loading } from "@/components/ui/loading";
 import { ProfileDetailsForm } from "@/components/user/profile-details-form";
 import { useQuery } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
+import { redirect } from "next/navigation";
 
-// Mock function to fetch user data - would be replaced with actual API call
-const fetchUserData = async (): Promise<User> => {
-  // This would be an API call in a real implementation
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        id: "user-1",
-        email: "john.doe@fastcode.ai",
-        name: "John Doe",
-        phone: "+91 9876543210",
-        address: "123 Main St, Bangalore",
-        role: UserRole.CANDIDATE,
-        createdAt: new Date(2025, 0, 1),
-        updatedAt: new Date(2025, 0, 1),
-      });
-    }, 500);
-  });
+// Function to fetch user data from the API
+const fetchUserData = async (userId: string): Promise<User> => {
+  const response = await fetch(`/api/users/${userId}`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch user data");
+  }
+
+  return response.json();
 };
 
 export default function ProfilePage() {
+  const { data: session, status } = useSession({
+    required: true,
+    onUnauthenticated() {
+      redirect("/auth/signin?callbackUrl=/user/profile");
+    },
+  });
+
+  const userId = session?.user?.id;
+
   // Use TanStack Query to fetch user data
   const {
     data: userData,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["userData"],
-    queryFn: fetchUserData,
+    queryKey: ["userData", userId],
+    queryFn: () => fetchUserData(userId as string),
+    enabled: !!userId, // Only run the query if we have a userId
   });
 
-  if (isLoading) {
+  // Show loading state while checking authentication or fetching data
+  if (status === "loading" || isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <Loading size="lg" variant="primary" text="Loading profile..." />
