@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { requiredDocuments } from "./FileUploadDrawer";
+import { requiredDocuments } from "./file-upload-drawer";
 
 interface DocumentCardProps {
   document?: Document;

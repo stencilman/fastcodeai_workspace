@@ -6,11 +6,11 @@ import { Document, DocumentStatus, DocumentType } from "@/models/document";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loading } from "@/components/ui/loading";
 import { FileText } from "lucide-react";
-import { DocumentCard } from "@/components/user/DocumentCard";
+import { DocumentCard } from "@/components/user/document-card";
 import {
   FileUploadDrawer,
   requiredDocuments,
-} from "@/components/user/FileUploadDrawer";
+} from "@/components/user/file-upload-drawer";
 
 // Mock function to fetch documents - would be replaced with actual API call
 const fetchUserDocuments = async (): Promise<Document[]> => {
