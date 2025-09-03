@@ -1,5 +1,9 @@
 import { DocumentType } from '@/models/document';
 
+// Cache for document URLs to prevent repeated fetching
+const documentUrlCache: Record<string, { url: string; timestamp: number }> = {};
+const CACHE_EXPIRY_MS = 15 * 60 * 1000; // 15 minutes
+
 export async function initiateDocumentUpload(
     file: File,
     docType: DocumentType
@@ -61,6 +65,16 @@ export async function uploadFileToS3(file: File, uploadUrl: string): Promise<voi
 }
 
 export async function getDocumentUrl(documentId: string): Promise<string> {
+    // Check cache first
+    const cachedData = documentUrlCache[documentId];
+    const now = Date.now();
+
+    // Return cached URL if it exists and hasn't expired
+    if (cachedData && (now - cachedData.timestamp) < CACHE_EXPIRY_MS) {
+        return cachedData.url;
+    }
+
+    // Fetch fresh URL if not in cache or expired
     const response = await fetch(`/api/documents/${documentId}`);
 
     if (!response.ok) {
@@ -69,6 +83,10 @@ export async function getDocumentUrl(documentId: string): Promise<string> {
     }
 
     const { url } = await response.json();
+
+    // Cache the URL with current timestamp
+    documentUrlCache[documentId] = { url, timestamp: now };
+
     return url;
 }
 
