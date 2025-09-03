@@ -67,12 +67,12 @@ export default auth((req) => {
   if (isLoggedIn) {
     // Admins trying to access user routes
     if (role === UserRole.ADMIN && isUserRoute) {
-      return Response.redirect(new URL("/not-authorized", nextUrl));
+      return Response.redirect(new URL(DEFAULT_ADMIN_REDIRECT, nextUrl));
     }
 
     // Users trying to access admin routes
     if (role === UserRole.USER && isAdminRoute) {
-      return Response.redirect(new URL("/not-authorized", nextUrl));
+      return Response.redirect(new URL(DEFAULT_USER_REDIRECT, nextUrl));
     }
   }
 
