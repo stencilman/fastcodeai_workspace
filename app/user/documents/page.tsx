@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
 import { Document, DocumentStatus, DocumentType } from "@/models/document";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loading } from "@/components/ui/loading";
@@ -19,12 +20,39 @@ import {
 import { toast } from "sonner";
 
 export default function UserDocumentsPage() {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<string>("all");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedDocType, setSelectedDocType] = useState<DocumentType | null>(
     null
   );
   const [isUploading, setIsUploading] = useState(false);
+  
+  // Check URL parameters for auto-opening drawer with selected document type
+  // and for setting the active tab
+  useEffect(() => {
+    const typeParam = searchParams.get('type');
+    const openParam = searchParams.get('open');
+    const tabParam = searchParams.get('tab');
+    
+    // Handle document type and drawer opening
+    if (typeParam && openParam === 'true') {
+      // Set the document type from URL parameter
+      setSelectedDocType(typeParam as DocumentType);
+      setDrawerOpen(true);
+      
+      // Set the appropriate tab
+      setActiveTab('pending_submission');
+    }
+    
+    // Handle tab selection
+    if (tabParam) {
+      // Valid tab values: all, pending_submission, pending_approval, approved, rejected
+      if (['all', 'pending_submission', 'pending_approval', 'approved', 'rejected'].includes(tabParam)) {
+        setActiveTab(tabParam);
+      }
+    }
+  }, [searchParams]);
 
   const {
     data: documents,

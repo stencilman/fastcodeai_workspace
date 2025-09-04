@@ -36,6 +36,11 @@ enum DocumentStatus {
   REJECTED
 }
 
+enum OnboardingStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -59,6 +64,7 @@ model User {
 
   // System fields
   role          UserRole  @default(USER)
+  onboardingStatus OnboardingStatus @default(IN_PROGRESS)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }

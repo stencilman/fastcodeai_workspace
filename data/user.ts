@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { User, UserRole, BloodGroup, CreateUserInput, UpdateUserInput } from "@/models/user";
+import { User, UserRole, BloodGroup, CreateUserInput, UpdateUserInput, OnboardingStatus } from "@/models/user";
 
 /**
  * Get a user by their email address
@@ -19,6 +19,7 @@ export const getUserByEmail = async (email: string): Promise<User | null> => {
       phone: user.phone || "",
       address: user.address || "",
       role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
+      onboardingStatus: user.onboardingStatus as any || OnboardingStatus.IN_PROGRESS,
       slackUserId: user.slackUserId || undefined,
       linkedinProfile: user.linkedinProfile || undefined,
       bloodGroup: user.bloodGroup as any,
@@ -54,6 +55,7 @@ export const getUserById = async (id: string): Promise<User | null> => {
       phone: user.phone || "",
       address: user.address || "",
       role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
+      onboardingStatus: user.onboardingStatus as any || OnboardingStatus.IN_PROGRESS,
       slackUserId: user.slackUserId || undefined,
       linkedinProfile: user.linkedinProfile || undefined,
       bloodGroup: user.bloodGroup as any,
@@ -106,6 +108,7 @@ export const createUser = async (data: CreateUserInput & {
       phone: user.phone || "",
       address: user.address || "",
       role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
+      onboardingStatus: user.onboardingStatus as any || OnboardingStatus.IN_PROGRESS,
       slackUserId: user.slackUserId || undefined,
       linkedinProfile: user.linkedinProfile || undefined,
       bloodGroup: user.bloodGroup as any,
@@ -184,6 +187,7 @@ export const updateUser = async (
       phone: user.phone || "",
       address: user.address || "",
       role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
+      onboardingStatus: user.onboardingStatus as any || OnboardingStatus.IN_PROGRESS,
       slackUserId: user.slackUserId || undefined,
       linkedinProfile: user.linkedinProfile || undefined,
       bloodGroup: user.bloodGroup as any,
@@ -217,6 +221,7 @@ export const deleteUser = async (id: string): Promise<User> => {
       phone: user.phone || "",
       address: user.address || "",
       role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
+      onboardingStatus: user.onboardingStatus as any || OnboardingStatus.IN_PROGRESS,
       slackUserId: user.slackUserId || undefined,
       linkedinProfile: user.linkedinProfile || undefined,
       bloodGroup: user.bloodGroup as any,
@@ -250,6 +255,7 @@ export const getAllUsers = async (): Promise<User[]> => {
       phone: user.phone || "",
       address: user.address || "",
       role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
+      onboardingStatus: user.onboardingStatus as any || OnboardingStatus.IN_PROGRESS,
       slackUserId: user.slackUserId || undefined,
       linkedinProfile: user.linkedinProfile || undefined,
       bloodGroup: user.bloodGroup as any,
@@ -286,6 +292,7 @@ export const getUsersByRole = async (role: UserRole): Promise<User[]> => {
       phone: user.phone || "",
       address: user.address || "",
       role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
+      onboardingStatus: user.onboardingStatus as any || OnboardingStatus.IN_PROGRESS,
       slackUserId: user.slackUserId || undefined,
       linkedinProfile: user.linkedinProfile || undefined,
       bloodGroup: user.bloodGroup as any,
@@ -325,6 +332,7 @@ export const searchUsers = async (query: string): Promise<User[]> => {
       phone: user.phone || "",
       address: user.address || "",
       role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
+      onboardingStatus: user.onboardingStatus as any || OnboardingStatus.IN_PROGRESS,
       slackUserId: user.slackUserId || undefined,
       linkedinProfile: user.linkedinProfile || undefined,
       bloodGroup: user.bloodGroup as any,

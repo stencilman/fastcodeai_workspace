@@ -41,9 +41,12 @@ const formSchema = z.object({
   }),
   linkedinProfile: z
     .string()
-    .url({ message: "Please enter a valid LinkedIn URL." })
-    .optional()
-    .or(z.literal("")),
+    .min(1, { message: "LinkedIn profile is required." })
+    .url({ message: "Please enter a valid URL." })
+    .refine(
+      (url) => url.includes("linkedin.com/"),
+      { message: "URL must be a LinkedIn profile." }
+    ),
   bloodGroup: z.string().optional(),
   role: z.string(),
   slackUserId: z.string().optional().or(z.literal("")),

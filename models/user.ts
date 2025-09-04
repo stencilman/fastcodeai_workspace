@@ -3,6 +3,11 @@ export enum UserRole {
     ADMIN = 'ADMIN',
 }
 
+export enum OnboardingStatus {
+    IN_PROGRESS = 'IN_PROGRESS',
+    COMPLETED = 'COMPLETED',
+}
+
 export enum BloodGroup {
     A_POSITIVE = 'A+',
     A_NEGATIVE = 'A-',
@@ -21,6 +26,7 @@ export interface User {
     phone: string; // Not in DB schema, maintained in application layer
     address: string; // Not in DB schema, maintained in application layer
     role: UserRole;
+    onboardingStatus: OnboardingStatus;
     slackUserId?: string; // Not in DB schema, maintained in application layer
     linkedinProfile?: string; // Not in DB schema, maintained in application layer
     bloodGroup?: BloodGroup; // Not in DB schema, maintained in application layer

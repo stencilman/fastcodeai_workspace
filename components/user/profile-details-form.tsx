@@ -1,15 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { BloodGroup, User } from "@/models/user";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Pencil, Info, Loader2, ExternalLink } from "lucide-react";
+import { FaSlack, FaLinkedin } from "react-icons/fa6";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -24,10 +27,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, ExternalLink, Pencil } from "lucide-react";
-import { toast } from "sonner";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { FaLinkedin, FaSlack } from "react-icons/fa6";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { BloodGroup, User } from "@/models/user";
 
 // Form schema with validation
 const formSchema = z.object({
@@ -39,9 +45,12 @@ const formSchema = z.object({
   }),
   linkedinProfile: z
     .string()
-    .url({ message: "Please enter a valid LinkedIn URL." })
-    .optional()
-    .or(z.literal("")),
+    .min(1, { message: "LinkedIn profile is required." })
+    .url({ message: "Please enter a valid URL." })
+    .refine(
+      (url) => url.includes("linkedin.com/"),
+      { message: "URL must be a LinkedIn profile." }
+    ),
   bloodGroup: z.string().optional(),
   slackUserId: z.string().optional().or(z.literal("")),
 });
@@ -139,6 +148,37 @@ const extractLinkedInUsername = (url: string): string => {
   }
 };
 
+// Custom SlackIdTooltip component for consistent usage
+function SlackIdTooltip() {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0" type="button">
+          <Info className="h-4 w-4 text-muted-foreground hover:text-primary" />
+          <span className="sr-only">Slack ID Info</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="right" className="w-80 p-4 space-y-3">
+        <h3 className="font-medium">How to Find Your Slack User ID</h3>
+        <div className="space-y-2 text-sm">
+          <div>
+            <span className="font-medium">Step 1:</span> Open Slack workspace
+          </div>
+          <div>
+            <span className="font-medium">Step 2:</span> Click your profile picture in the top right
+          </div>
+          <div>
+            <span className="font-medium">Step 3:</span> Select "View profile"
+          </div>
+          <div>
+            <span className="font-medium">Step 4:</span> Click the three dots (...) and select "Copy member ID"
+          </div>
+        </div>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 export function ProfileDetailsForm({
   userData,
   onSuccess,
@@ -217,24 +257,25 @@ export function ProfileDetailsForm({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Profile Details</h3>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsEditing(!isEditing)}
-        >
-          {isEditing ? (
-            "Cancel"
-          ) : (
-            <>
-              <Pencil className="h-4 w-4 mr-2" />
-              Edit
-            </>
-          )}
-        </Button>
-      </div>
+    <TooltipProvider>
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-medium">Profile Details</h3>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsEditing(!isEditing)}
+          >
+            {isEditing ? (
+              "Cancel"
+            ) : (
+              <>
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit
+              </>
+            )}
+          </Button>
+        </div>
 
       {isEditing ? (
         <Form {...form}>
@@ -310,7 +351,10 @@ export function ProfileDetailsForm({
                 name="slackUserId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Slack User ID</FormLabel>
+                    <div className="flex items-center gap-1">
+                      <FormLabel>Slack User ID</FormLabel>
+                      <SlackIdTooltip />
+                    </div>
                     <FormControl>
                       <Input placeholder="U01234ABC" {...field} />
                     </FormControl>
@@ -387,9 +431,12 @@ export function ProfileDetailsForm({
             </div>
 
             <div className="space-y-1">
-              <h4 className="text-sm font-medium text-muted-foreground">
-                Slack ID
-              </h4>
+              <div className="flex items-center gap-1">
+                <h4 className="text-sm font-medium text-muted-foreground">
+                  Slack ID
+                </h4>
+                <SlackIdTooltip />
+              </div>
               {userData.slackUserId ? (
                 <div className="flex items-center gap-1">
                   <FaSlack className="h-4 w-4 text-[#4A154B]" />
@@ -419,6 +466,7 @@ export function ProfileDetailsForm({
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }
