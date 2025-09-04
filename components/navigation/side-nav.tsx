@@ -102,8 +102,8 @@ export default function SideNav({
       icon: User,
     },
     {
-      label: "Office Entry",
-      href: "/user/office-entry",
+      label: "General Guidelines",
+      href: "/user/general-guidelines",
       icon: FileText,
     },
     {
