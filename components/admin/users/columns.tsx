@@ -122,7 +122,7 @@ export const columns: ColumnDef<UserTableData>[] = [
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link
-                href={`/admin/users/${user.id}`}
+                href={`/admin/users/${user.id}?edit=true`}
                 className="flex items-center gap-2"
                 onClick={(e) => e.stopPropagation()}
               >

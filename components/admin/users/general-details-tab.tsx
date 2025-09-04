@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TabsContent } from "@/components/ui/tabs";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, ExternalLink, Pencil } from "lucide-react";
 import { FaLinkedin, FaSlack } from "react-icons/fa6";
@@ -13,7 +13,16 @@ import { getDisplayBloodGroup } from "@/lib/utils";
 
 export function GeneralDetailsTab() {
   const params = useParams();
+  const searchParams = useSearchParams();
+  const editParam = searchParams.get("edit");
   const [isEditing, setIsEditing] = useState(false);
+
+  // Check for edit parameter in URL and set edit mode accordingly
+  useEffect(() => {
+    if (editParam === "true") {
+      setIsEditing(true);
+    }
+  }, [editParam]);
 
   const { data: user, isLoading } = useQuery({
     queryKey: ["user", params.id],
