@@ -176,13 +176,22 @@ export function DocumentCard({
         );
       case DocumentStatus.REJECTED:
         return (
-          <Badge
-            variant="outline"
-            className="bg-red-50 text-red-700 border-red-200 flex items-center gap-1"
-          >
-            <AlertCircle className="h-4 w-4" />
-            <span>Rejected</span>
-          </Badge>
+          <>
+            <Badge
+              variant="outline"
+              className="bg-red-50 text-red-700 border-red-200 flex items-center gap-1"
+            >
+              <AlertCircle className="h-4 w-4" />
+              <span>Rejected</span>
+            </Badge>
+            <Badge
+              variant="outline"
+              className="bg-orange-50 text-orange-700 border-orange-200 flex items-center gap-1 ml-1"
+            >
+              <Upload className="h-4 w-4" />
+              <span>Reupload Required</span>
+            </Badge>
+          </>
         );
       default:
         return <Badge variant="outline">Unknown</Badge>;

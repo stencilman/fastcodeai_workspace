@@ -17,7 +17,7 @@ export function DocumentsTab() {
 
   // Fetch documents for the user
   const {
-    data: documents,
+    data: documentsData,
     isLoading,
     error,
   } = useQuery({
@@ -30,6 +30,9 @@ export function DocumentsTab() {
       return response.json();
     },
   });
+
+  // Extract documents from the response
+  const documents = documentsData?.documents || [];
 
   // Mutation for approving documents
   const approveMutation = useMutation({
@@ -55,18 +58,20 @@ export function DocumentsTab() {
       // Optimistically update the cache
       queryClient.setQueryData(
         ["documents", userId],
-        (oldData: Document[] | undefined) => {
-          if (!oldData) return [];
-          return oldData.map((doc) =>
-            doc.id === documentId
-              ? {
-                  ...doc,
-                  status: DocumentStatus.APPROVED,
-                  reviewedAt: new Date(),
-                  reviewedBy: "3", // Admin user ID
-                }
-              : doc
-          );
+        (oldData: any | undefined) => {
+          if (!oldData) return { documents: [] };
+          return {
+            documents: oldData.documents.map((doc: Document) =>
+              doc.id === documentId
+                ? {
+                    ...doc,
+                    status: DocumentStatus.APPROVED,
+                    reviewedAt: new Date(),
+                    reviewedBy: "3", // Admin user ID
+                  }
+                : doc
+            ),
+          };
         }
       );
 
@@ -113,19 +118,21 @@ export function DocumentsTab() {
       // Optimistically update the cache
       queryClient.setQueryData(
         ["documents", userId],
-        (oldData: Document[] | undefined) => {
-          if (!oldData) return [];
-          return oldData.map((doc) =>
-            doc.id === documentId
-              ? {
-                  ...doc,
-                  status: DocumentStatus.REJECTED,
-                  reviewedAt: new Date(),
-                  reviewedBy: "3", // Admin user ID
-                  notes: data.notes, // Use the notes from the response
-                }
-              : doc
-          );
+        (oldData: any | undefined) => {
+          if (!oldData) return { documents: [] };
+          return {
+            documents: oldData.documents.map((doc: Document) =>
+              doc.id === documentId
+                ? {
+                    ...doc,
+                    status: DocumentStatus.REJECTED,
+                    reviewedAt: new Date(),
+                    reviewedBy: "3", // Admin user ID
+                    notes: data.notes, // Use the notes from the response
+                  }
+                : doc
+            ),
+          };
         }
       );
 

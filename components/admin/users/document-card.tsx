@@ -28,8 +28,10 @@ import {
   FileCheck,
   ExternalLink,
   Download,
+  Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getDocumentUrl } from "@/lib/document-upload-service";
 
 interface DocumentCardProps {
   document: Document;
@@ -50,6 +52,8 @@ export function DocumentCard({
   const [isLoading, setIsLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pdfError, setPdfError] = useState(false);
+  const [documentUrl, setDocumentUrl] = useState<string | null>(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [localDocumentStatus, setLocalDocumentStatus] =
     useState<DocumentStatus>(document.status);
   const [rejectionDialogOpen, setRejectionDialogOpen] = useState(false);
@@ -60,20 +64,79 @@ export function DocumentCard({
     setLocalDocumentStatus(document.status);
   }, [document.status]);
 
+  // Determine file type
+  const isPdf = document.fileName.toLowerCase().endsWith(".pdf");
+  const isImage = document.fileName
+    .toLowerCase()
+    .match(/\.(jpg|jpeg|png|gif|webp)$/i);
+  const documentName = document.fileName || "Document";
+
+  // Fetch thumbnail URL for image documents
+  useEffect(() => {
+    if (document?.id && isImage) {
+      getDocumentUrl(document.id)
+        .then((url) => {
+          setThumbnailUrl(url);
+        })
+        .catch((error) => {
+          console.error("Error fetching thumbnail URL:", error);
+        });
+    }
+  }, [document?.id, isImage]);
+
+  // Fetch document URL when needed for dialog preview
+  useEffect(() => {
+    if (document?.id && dialogOpen) {
+      setDocumentUrl(null);
+      getDocumentUrl(document.id)
+        .then((url) => {
+          setDocumentUrl(url);
+        })
+        .catch((error) => {
+          console.error("Error fetching document URL:", error);
+          setPdfError(true);
+        });
+    }
+  }, [document?.id, dialogOpen]);
+
   // Get appropriate icon based on document type
   const getDocumentIcon = () => {
-    switch (document.type) {
-      case DocumentType.PAN_CARD:
-        return <CreditCard className="h-12 w-12 text-blue-500" />;
-      case DocumentType.AADHAR_CARD:
-        return <FileImage className="h-12 w-12 text-green-500" />;
-      case DocumentType.CANCELLED_CHEQUE:
-        return <FileCheck className="h-12 w-12 text-amber-500" />;
-      case DocumentType.OFFER_LETTER:
-        return <FileText className="h-12 w-12 text-purple-500" />;
-      default:
-        return <FileText className="h-12 w-12 text-gray-500" />;
+    // For image documents, show the image if thumbnail URL is available
+    if (isImage) {
+      if (thumbnailUrl) {
+        return (
+          <div className="w-12 h-12 overflow-hidden rounded-md">
+            <img
+              src={thumbnailUrl}
+              alt={document.fileName}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        );
+      } else {
+        // Show loading indicator while fetching the image
+        return (
+          <div className="h-12 w-12 flex items-center justify-center">
+            <Loading size="sm" variant="primary" />
+          </div>
+        );
+      }
     }
+
+    // For PDF documents
+    if (isPdf) {
+      return (
+        <div className="relative">
+          <FileText className="h-12 w-12 text-gray-500" />
+          <div className="absolute -bottom-1 -right-1 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+            <Eye className="h-3 w-3" />
+          </div>
+        </div>
+      );
+    }
+
+    // Default document icon for other types
+    return <FileText className="h-12 w-12 text-gray-500" />;
   };
 
   // Get status badge color
@@ -113,34 +176,28 @@ export function DocumentCard({
 
   // Get document type badge
   const getTypeBadge = () => {
+    let label = "Document";
+
     switch (document.type) {
       case DocumentType.PAN_CARD:
-        return (
-          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-            PAN Card
-          </Badge>
-        );
+        label = "PAN Card";
+        break;
       case DocumentType.AADHAR_CARD:
-        return (
-          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-            Aadhar Card
-          </Badge>
-        );
+        label = "Aadhar Card";
+        break;
       case DocumentType.CANCELLED_CHEQUE:
-        return (
-          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">
-            Cancelled Cheque
-          </Badge>
-        );
+        label = "Cancelled Cheque";
+        break;
       case DocumentType.OFFER_LETTER:
-        return (
-          <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">
-            Offer Letter
-          </Badge>
-        );
-      default:
-        return <Badge>Unknown</Badge>;
+        label = "Offer Letter";
+        break;
     }
+
+    return (
+      <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
+        {label}
+      </Badge>
+    );
   };
 
   // Format date
@@ -153,8 +210,6 @@ export function DocumentCard({
   };
 
   const isPending = localDocumentStatus === DocumentStatus.PENDING;
-  const isPdf = document.s3Key.toLowerCase().endsWith(".pdf");
-  const documentName = document.s3Key.split("/").pop() || "Document";
 
   const togglePreview = () => {
     setIsPreviewOpen(!isPreviewOpen);
@@ -244,7 +299,9 @@ export function DocumentCard({
             )}
           </div>
           {document.notes && (
-            <div className="text-xs mt-1 italic truncate">{document.notes}</div>
+            <div className="text-xs mt-1 italic truncate text-red-600">
+              {document.notes}
+            </div>
           )}
         </div>
         {isPending && (
@@ -342,15 +399,15 @@ export function DocumentCard({
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between pr-8">
               <span className="truncate mr-4">{documentName}</span>
-              {isPdf && (
+              {documentUrl && (
                 <a
-                  href={document.s3Key}
+                  href={documentUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 whitespace-nowrap"
                 >
                   <Download className="h-4 w-4 mr-1" />
-                  Download PDF
+                  Download {isPdf ? "PDF" : "Image"}
                 </a>
               )}
             </DialogTitle>
@@ -368,19 +425,21 @@ export function DocumentCard({
                   <p className="mb-4 text-red-600">
                     Unable to load PDF preview.
                   </p>
-                  <a
-                    href={document.s3Key}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  >
-                    <Download className="h-4 w-4" />
-                    Download PDF
-                  </a>
+                  {documentUrl && (
+                    <a
+                      href={documentUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                      <Download className="h-4 w-4" />
+                      Download PDF
+                    </a>
+                  )}
                 </div>
               ) : (
                 <iframe
-                  src={document.s3Key}
+                  src={documentUrl || undefined}
                   className="w-full h-full border-0"
                   onLoad={handleLoad}
                   onError={handleError}
@@ -388,7 +447,7 @@ export function DocumentCard({
               )
             ) : (
               <img
-                src={document.s3Key}
+                src={documentUrl || undefined}
                 alt={documentName}
                 className="w-full h-full object-contain"
                 onLoad={handleLoad}

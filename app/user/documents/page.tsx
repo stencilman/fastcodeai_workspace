@@ -46,6 +46,8 @@ export default function UserDocumentsPage() {
   // Filter documents based on active tab
   const filteredDocuments = documents?.filter((doc: Document) => {
     if (activeTab === "all") return true;
+    if (activeTab === "pending_submission")
+      return !uploadedDocTypes.includes(doc.type);
     if (activeTab === "pending_approval")
       return doc.status === DocumentStatus.PENDING;
     if (activeTab === "approved") return doc.status === DocumentStatus.APPROVED;
@@ -131,38 +133,40 @@ export default function UserDocumentsPage() {
       </div>
 
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-5 w-full mb-4 bg-primary/10">
-          <TabsTrigger
-            value="all"
-            className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary"
-          >
-            All
-          </TabsTrigger>
-          <TabsTrigger
-            value="pending_submission"
-            className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary"
-          >
-            Pending Submission
-          </TabsTrigger>
-          <TabsTrigger
-            value="pending_approval"
-            className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary"
-          >
-            Pending Approval
-          </TabsTrigger>
-          <TabsTrigger
-            value="approved"
-            className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary"
-          >
-            Approved
-          </TabsTrigger>
-          <TabsTrigger
-            value="rejected"
-            className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary"
-          >
-            Rejected
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto pb-2 mb-2">
+          <TabsList className="inline-flex md:flex md:w-full w-auto bg-primary/10 p-1">
+            <TabsTrigger
+              value="all"
+              className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary px-6 md:flex-1"
+            >
+              All
+            </TabsTrigger>
+            <TabsTrigger
+              value="pending_submission"
+              className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary px-6 md:flex-1"
+            >
+              Pending Submission
+            </TabsTrigger>
+            <TabsTrigger
+              value="pending_approval"
+              className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary px-6 md:flex-1"
+            >
+              Pending Approval
+            </TabsTrigger>
+            <TabsTrigger
+              value="approved"
+              className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary px-6 md:flex-1"
+            >
+              Approved
+            </TabsTrigger>
+            <TabsTrigger
+              value="rejected"
+              className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary px-6 md:flex-1"
+            >
+              Rejected
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="all" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -209,58 +213,56 @@ export default function UserDocumentsPage() {
 
         <TabsContent value="pending_approval" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Group documents by type and show only the latest one */}
             {(() => {
-              // Create a map to store the latest document of each type
-              const latestDocsByType = new Map<DocumentType, Document>();
+              // Filter only documents with PENDING status
+              const pendingDocs =
+                documents?.filter(
+                  (doc: Document) => doc.status === DocumentStatus.PENDING
+                ) || [];
 
-              // Find the latest document for each type
-              filteredDocuments?.forEach((doc: Document) => {
-                const existingDoc = latestDocsByType.get(doc.type);
+              // Group by document type to show only the latest one
+              const latestPendingDocsByType = new Map<DocumentType, Document>();
+
+              pendingDocs.forEach((doc: Document) => {
+                const existingDoc = latestPendingDocsByType.get(doc.type);
                 if (
                   !existingDoc ||
                   new Date(doc.uploadedAt) > new Date(existingDoc.uploadedAt)
                 ) {
-                  latestDocsByType.set(doc.type, doc);
+                  latestPendingDocsByType.set(doc.type, doc);
                 }
               });
 
               // Convert map to array
-              const uniqueDocs = Array.from(latestDocsByType.values());
+              const uniquePendingDocs = Array.from(
+                latestPendingDocsByType.values()
+              );
 
-              if (uniqueDocs.length > 0) {
-                return uniqueDocs.map((doc: Document) => (
+              if (uniquePendingDocs.length > 0) {
+                return uniquePendingDocs.map((doc: Document) => (
                   <DocumentCard
                     key={doc.id}
                     docType={doc.type}
                     document={doc}
-                    onClick={() => handleDocumentCardClick(doc, doc.type)}
+                    onClick={() => {}} // No action needed for pending docs
                     isUploading={isUploading && selectedDocType === doc.type}
                   />
                 ));
               } else {
-                // Show missing documents that need to be uploaded
-                return missingDocTypes.map((docType) => (
-                  <DocumentCard
-                    key={docType}
-                    docType={docType}
-                    onClick={() => openUploadDrawer(docType)}
-                    isUploading={isUploading && selectedDocType === docType}
-                  />
-                ));
+                return (
+                  <div className="text-center p-8 border rounded-md bg-slate-50 col-span-2">
+                    <FileText className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                    <h3 className="font-medium text-lg">
+                      No pending documents
+                    </h3>
+                    <p className="text-muted-foreground mt-1">
+                      You don't have any documents pending approval.
+                    </p>
+                  </div>
+                );
               }
             })()}
           </div>
-
-          {filteredDocuments?.length === 0 && missingDocTypes.length === 0 && (
-            <div className="text-center p-8 border rounded-md bg-slate-50">
-              <FileText className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-              <h3 className="font-medium text-lg">No pending documents</h3>
-              <p className="text-muted-foreground mt-1">
-                You don't have any pending documents to upload.
-              </p>
-            </div>
-          )}
         </TabsContent>
 
         <TabsContent value="approved" className="mt-6">
