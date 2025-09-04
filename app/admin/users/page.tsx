@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AdminUserTable } from "@/components/admin/users/admin-user-table";
 import { UserTableData } from "@/components/admin/users/columns";
 import { Loading } from "@/components/ui/loading";
+import { Toaster } from "sonner";
 import {
   Select,
   SelectContent,
@@ -58,6 +59,7 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-4">
+      <Toaster position="top-right" richColors />
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">User Management</h1>
         <div className="flex items-center gap-2">

@@ -1,17 +1,41 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { UserRole } from "@/models/user";
+import { UserRole, OnboardingStatus } from "@/models/user";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, FileText, Edit, Trash } from "lucide-react";
+import { MoreHorizontal, FileText, Edit, Trash, CheckCircle } from "lucide-react";
+
+// Function to update onboarding status
+async function updateOnboardingStatus(userId: string, status: OnboardingStatus) {
+  try {
+    const response = await fetch(`/api/users/${userId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ onboardingStatus: status }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update onboarding status");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error updating onboarding status:", error);
+    throw error;
+  }
+}
 
 // Define the User type for the table
 export type UserTableData = {
@@ -19,9 +43,20 @@ export type UserTableData = {
   name: string;
   email: string;
   role: UserRole;
-  slackUserId: string | null;
+  onboardingStatus: OnboardingStatus;
   createdAt: Date;
   updatedAt: Date;
+};
+
+// Define column classes for consistent widths
+const columnClasses = {
+  name: "w-[150px]",
+  email: "w-[200px]",
+  role: "w-[100px]",
+  onboardingStatus: "w-[120px]",
+  createdAt: "w-[100px]",
+  updatedAt: "w-[100px]",
+  actions: "w-[80px]",
 };
 
 export const columns: ColumnDef<UserTableData>[] = [
@@ -60,17 +95,17 @@ export const columns: ColumnDef<UserTableData>[] = [
     size: 100,
   },
   {
-    accessorKey: "slackUserId",
-    header: "Slack Status",
+    accessorKey: "onboardingStatus",
+    header: "Onboarding",
     cell: ({ row }) => {
-      const slackUserId = row.getValue("slackUserId") as string | null;
-      return slackUserId ? (
-        <span className="text-green-600">Connected</span>
+      const status = row.getValue("onboardingStatus") as OnboardingStatus;
+      return status === OnboardingStatus.COMPLETED ? (
+        <span className="text-green-600">Completed</span>
       ) : (
-        <span className="text-amber-600">Not Invited</span>
+        <span className="text-amber-600">In Progress</span>
       );
     },
-    size: 120,
+    size: 100,
   },
   {
     accessorKey: "createdAt",
@@ -96,6 +131,23 @@ export const columns: ColumnDef<UserTableData>[] = [
     id: "actions",
     cell: ({ row }) => {
       const user = row.original;
+      const queryClient = useQueryClient();
+      
+      const handleOnboardingStatusUpdate = async (e: React.MouseEvent, status: OnboardingStatus) => {
+        e.stopPropagation();
+        try {
+          await updateOnboardingStatus(user.id, status);
+          const message = status === OnboardingStatus.COMPLETED 
+            ? "Onboarding marked as completed" 
+            : "Onboarding marked as in progress";
+          toast.success(message);
+          // Invalidate and refetch users data
+          queryClient.invalidateQueries({ queryKey: ["users"] });
+        } catch (error) {
+          toast.error("Failed to update onboarding status");
+        }
+      };
+      
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -130,6 +182,23 @@ export const columns: ColumnDef<UserTableData>[] = [
                 <span>Edit</span>
               </Link>
             </DropdownMenuItem>
+            {user.onboardingStatus === OnboardingStatus.IN_PROGRESS ? (
+              <DropdownMenuItem
+                onClick={(e) => handleOnboardingStatusUpdate(e, OnboardingStatus.COMPLETED)}
+                className="flex items-center gap-2 text-green-600"
+              >
+                <CheckCircle className="h-4 w-4" />
+                <span>Mark as Complete</span>
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem
+                onClick={(e) => handleOnboardingStatusUpdate(e, OnboardingStatus.IN_PROGRESS)}
+                className="flex items-center gap-2 text-amber-600"
+              >
+                <CheckCircle className="h-4 w-4" />
+                <span>Mark as Incomplete</span>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               variant="destructive"
               onClick={(e) => {

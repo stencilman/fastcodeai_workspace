@@ -39,7 +39,7 @@ const columnClasses = {
   name: "w-[150px]",
   email: "w-[200px]",
   role: "w-[100px]",
-  slackUserId: "w-[120px]",
+  onboardingStatus: "w-[100px]",
   createdAt: "w-[100px]",
   updatedAt: "w-[100px]",
   actions: "w-[80px]",

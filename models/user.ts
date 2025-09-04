@@ -61,4 +61,5 @@ export interface UpdateUserInput {
     lastName?: string;
     password?: string;
     image?: string;
+    onboardingStatus?: OnboardingStatus;
 }

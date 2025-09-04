@@ -147,6 +147,7 @@ export const updateUser = async (
     if (data.address !== undefined) updateData.address = data.address;
     if (data.slackUserId !== undefined) updateData.slackUserId = data.slackUserId;
     if (data.linkedinProfile !== undefined) updateData.linkedinProfile = data.linkedinProfile;
+    if (data.onboardingStatus !== undefined) updateData.onboardingStatus = data.onboardingStatus;
 
     // Handle BloodGroup enum conversion
     if (data.bloodGroup !== undefined) {

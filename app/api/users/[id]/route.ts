@@ -103,6 +103,7 @@ export async function PATCH(
         if (body.lastName !== undefined) updateData.lastName = body.lastName;
         if (body.password !== undefined) updateData.password = body.password;
         if (body.image !== undefined) updateData.image = body.image;
+        if (body.onboardingStatus !== undefined) updateData.onboardingStatus = body.onboardingStatus;
 
         // Update the user
         const updatedUser = await updateUser(id, {
