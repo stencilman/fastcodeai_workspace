@@ -201,23 +201,28 @@ export function AdminProfileDetailsForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Name */}
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Full Name</FormLabel>
-              <FormControl>
-                <Input placeholder="John Doe" {...field} />
-              </FormControl>
-              <FormDescription>User's full name</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Name */}
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Full Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="John Doe" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          {/* Email - Read-only field */}
+          <div>
+            <FormLabel>Email</FormLabel>
+            <Input value={userData.email || ""} disabled />
+          </div>
+          
           {/* Phone Number */}
           <FormField
             control={form.control}
@@ -228,7 +233,44 @@ export function AdminProfileDetailsForm({
                 <FormControl>
                   <Input placeholder="+91 9876543210" {...field} />
                 </FormControl>
-                <FormDescription>User's contact phone number</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Address */}
+          <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Address</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter address" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* User Role */}
+          <FormField
+            control={form.control}
+            name="role"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Role</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select user role" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value={UserRole.USER}>User</SelectItem>
+                    <SelectItem value={UserRole.ADMIN}>Admin</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -260,9 +302,21 @@ export function AdminProfileDetailsForm({
                     )}
                   </SelectContent>
                 </Select>
-                <FormDescription>
-                  Blood group for emergency purposes
-                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Slack User ID */}
+          <FormField
+            control={form.control}
+            name="slackUserId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Slack ID</FormLabel>
+                <FormControl>
+                  <Input placeholder="U01234ABC" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -281,76 +335,11 @@ export function AdminProfileDetailsForm({
                     {...field}
                   />
                 </FormControl>
-                <FormDescription>User's LinkedIn profile URL</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Slack User ID */}
-          <FormField
-            control={form.control}
-            name="slackUserId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Slack User ID</FormLabel>
-                <FormControl>
-                  <Input placeholder="U01234ABC" {...field} />
-                </FormControl>
-                <FormDescription>User's Slack ID</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* User Role */}
-          <FormField
-            control={form.control}
-            name="role"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>User Role</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select user role" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value={UserRole.USER}>User</SelectItem>
-                    <SelectItem value={UserRole.ADMIN}>Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  User's role and permissions level
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-
-        {/* Permanent Address */}
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Permanent Address</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Enter permanent address"
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>
-                User's permanent residential address
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
         <Button type="submit" disabled={isPending || !formChanged}>
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -47,10 +47,9 @@ const formSchema = z.object({
     .string()
     .min(1, { message: "LinkedIn profile is required." })
     .url({ message: "Please enter a valid URL." })
-    .refine(
-      (url) => url.includes("linkedin.com/"),
-      { message: "URL must be a LinkedIn profile." }
-    ),
+    .refine((url) => url.includes("linkedin.com/"), {
+      message: "URL must be a LinkedIn profile.",
+    }),
   bloodGroup: z.string().optional(),
   slackUserId: z.string().optional().or(z.literal("")),
 });
@@ -153,7 +152,12 @@ function SlackIdTooltip() {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0" type="button">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-5 w-5 rounded-full p-0"
+          type="button"
+        >
           <Info className="h-4 w-4 text-muted-foreground hover:text-primary" />
           <span className="sr-only">Slack ID Info</span>
         </Button>
@@ -162,16 +166,18 @@ function SlackIdTooltip() {
         <h3 className="font-medium">How to Find Your Slack User ID</h3>
         <div className="space-y-2 text-sm">
           <div>
-            <span className="font-medium">Step 1:</span> Open Slack workspace
+            <span className="font-medium">Step 1:</span> Open Slack
           </div>
           <div>
-            <span className="font-medium">Step 2:</span> Click your profile picture in the top right
+            <span className="font-medium">Step 2:</span> Click your profile
+            picture on the bottom left
           </div>
           <div>
-            <span className="font-medium">Step 3:</span> Select "View profile"
+            <span className="font-medium">Step 3:</span> Select "Profile"
           </div>
           <div>
-            <span className="font-medium">Step 4:</span> Click the three dots (...) and select "Copy member ID"
+            <span className="font-medium">Step 4:</span> Click the vertical
+            three dots (⋮) and select "Copy member ID"
           </div>
         </div>
       </TooltipContent>
@@ -277,66 +283,111 @@ export function ProfileDetailsForm({
           </Button>
         </div>
 
-      {isEditing ? (
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Phone Number */}
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="+91 9876543210" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Blood Group */}
-              <FormField
-                control={form.control}
-                name="bloodGroup"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Blood Group</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value || ""}
-                    >
+        {isEditing ? (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Phone Number */}
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select blood group" />
-                        </SelectTrigger>
+                        <Input placeholder="+91 9876543210" {...field} />
                       </FormControl>
-                      <SelectContent>
-                        {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
-                          (group) => (
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Blood Group */}
+                <FormField
+                  control={form.control}
+                  name="bloodGroup"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Blood Group</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select blood group" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {[
+                            "A+",
+                            "A-",
+                            "B+",
+                            "B-",
+                            "AB+",
+                            "AB-",
+                            "O+",
+                            "O-",
+                          ].map((group) => (
                             <SelectItem key={group} value={group}>
                               {group}
                             </SelectItem>
-                          )
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              {/* LinkedIn Profile */}
+                {/* LinkedIn Profile */}
+                <FormField
+                  control={form.control}
+                  name="linkedinProfile"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>LinkedIn Profile</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="https://linkedin.com/in/username"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Slack User ID */}
+                <FormField
+                  control={form.control}
+                  name="slackUserId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center gap-1">
+                        <FormLabel>Slack User ID</FormLabel>
+                        <SlackIdTooltip />
+                      </div>
+                      <FormControl>
+                        <Input placeholder="U01234ABC" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Permanent Address */}
               <FormField
                 control={form.control}
-                name="linkedinProfile"
+                name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>LinkedIn Profile</FormLabel>
+                    <FormLabel>Permanent Address</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="https://linkedin.com/in/username"
+                      <Textarea
+                        placeholder="Enter permanent address"
+                        className="resize-none"
                         {...field}
                       />
                     </FormControl>
@@ -345,127 +396,89 @@ export function ProfileDetailsForm({
                 )}
               />
 
-              {/* Slack User ID */}
-              <FormField
-                control={form.control}
-                name="slackUserId"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center gap-1">
-                      <FormLabel>Slack User ID</FormLabel>
-                      <SlackIdTooltip />
-                    </div>
-                    <FormControl>
-                      <Input placeholder="U01234ABC" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+              <Button type="submit" disabled={isPending || !formChanged}>
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Changes
+              </Button>
+            </form>
+          </Form>
+        ) : (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <h4 className="text-sm font-medium text-muted-foreground">
+                  Phone
+                </h4>
+                <p>{userData.phone || "Not provided"}</p>
+              </div>
+
+              <div className="space-y-1">
+                <h4 className="text-sm font-medium text-muted-foreground">
+                  Blood Group
+                </h4>
+                <p>
+                  {getDisplayBloodGroup(userData.bloodGroup) || "Not provided"}
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <h4 className="text-sm font-medium text-muted-foreground">
+                  LinkedIn Profile
+                </h4>
+                {userData.linkedinProfile ? (
+                  <div className="flex items-center gap-1">
+                    <FaLinkedin className="h-4 w-4 text-[#0A66C2]" />
+                    <a
+                      href={userData.linkedinProfile}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline flex items-center gap-1"
+                    >
+                      {extractLinkedInUsername(userData.linkedinProfile)}
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                ) : (
+                  <p>Not provided</p>
                 )}
-              />
-            </div>
+              </div>
 
-            {/* Permanent Address */}
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Permanent Address</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Enter permanent address"
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button type="submit" disabled={isPending || !formChanged}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Changes
-            </Button>
-          </form>
-        </Form>
-      ) : (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-1">
-              <h4 className="text-sm font-medium text-muted-foreground">
-                Phone
-              </h4>
-              <p>{userData.phone || "Not provided"}</p>
+              <div className="space-y-1">
+                <div className="flex items-center gap-1">
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Slack ID
+                  </h4>
+                  <SlackIdTooltip />
+                </div>
+                {userData.slackUserId ? (
+                  <div className="flex items-center gap-1">
+                    <FaSlack className="h-4 w-4 text-[#4A154B]" />
+                    <a
+                      href={`https://fastcodeai.slack.com/team/${userData.slackUserId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline flex items-center gap-1"
+                    >
+                      {userData.slackUserId}
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                ) : (
+                  <p>Not provided</p>
+                )}
+              </div>
             </div>
 
             <div className="space-y-1">
               <h4 className="text-sm font-medium text-muted-foreground">
-                Blood Group
+                Address
               </h4>
-              <p>
-                {getDisplayBloodGroup(userData.bloodGroup) || "Not provided"}
+              <p className="whitespace-pre-wrap">
+                {userData.address || "Not provided"}
               </p>
             </div>
-
-            <div className="space-y-1">
-              <h4 className="text-sm font-medium text-muted-foreground">
-                LinkedIn Profile
-              </h4>
-              {userData.linkedinProfile ? (
-                <div className="flex items-center gap-1">
-                  <FaLinkedin className="h-4 w-4 text-[#0A66C2]" />
-                  <a
-                    href={userData.linkedinProfile}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline flex items-center gap-1"
-                  >
-                    {extractLinkedInUsername(userData.linkedinProfile)}
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-              ) : (
-                <p>Not provided</p>
-              )}
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex items-center gap-1">
-                <h4 className="text-sm font-medium text-muted-foreground">
-                  Slack ID
-                </h4>
-                <SlackIdTooltip />
-              </div>
-              {userData.slackUserId ? (
-                <div className="flex items-center gap-1">
-                  <FaSlack className="h-4 w-4 text-[#4A154B]" />
-                  <a
-                    href={`https://fastcodeai.slack.com/team/${userData.slackUserId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline flex items-center gap-1"
-                  >
-                    {userData.slackUserId}
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-              ) : (
-                <p>Not provided</p>
-              )}
-            </div>
           </div>
-
-          <div className="space-y-1">
-            <h4 className="text-sm font-medium text-muted-foreground">
-              Address
-            </h4>
-            <p className="whitespace-pre-wrap">
-              {userData.address || "Not provided"}
-            </p>
-          </div>
-        </div>
-      )}
+        )}
       </div>
     </TooltipProvider>
   );

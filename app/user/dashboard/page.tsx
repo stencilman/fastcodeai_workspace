@@ -359,144 +359,134 @@ export default function UserDashboardPage() {
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>
-            Common tasks you might want to perform
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <Button variant="outline" className="justify-start" asChild>
-              <Link href="/user/profile">
-                <User className="h-4 w-4 mr-2" /> Edit Profile
-              </Link>
-            </Button>
-            <Button variant="outline" className="justify-start" asChild>
-              <Link href="/user/documents?tab=pending_submission">
-                <Upload className="h-4 w-4 mr-2" /> Upload Documents
-              </Link>
-            </Button>
-            <Button variant="outline" className="justify-start" asChild>
-              <Link href="/user/general-guidelines">
-                <FileText className="h-4 w-4 mr-2" /> View Guidelines
-              </Link>
-            </Button>
-            <Button variant="outline" className="justify-start" asChild>
-              <Link href="/user/documents?tab=rejected">
-                <AlertCircle className="h-4 w-4 mr-2" /> Fix Rejected Docs
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>
-              Your latest document uploads and status changes
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {dashboardData?.recentActivity &&
-            dashboardData.recentActivity.length > 0 ? (
-              <div className="space-y-4">
-                {dashboardData.recentActivity.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-start gap-4 pb-4 border-b last:border-0 last:pb-0"
-                  >
-                    <div className="bg-primary/10 p-2 rounded-full">
-                      <FileText className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <p className="font-medium">
-                          {documentTypeNames[activity.type]}
-                        </p>
-                        <StatusBadge status={activity.status} />
-                      </div>
-                      <p className="text-sm text-muted-foreground truncate max-w-[250px]">
-                        {activity.fileName}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {activity.reviewedAt
-                          ? `Reviewed ${formatDistanceToNow(
-                              new Date(activity.reviewedAt),
-                              { addSuffix: true }
-                            )}`
-                          : `Uploaded ${formatDistanceToNow(
-                              new Date(activity.uploadedAt),
-                              { addSuffix: true }
-                            )}`}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <FileText className="h-10 w-10 text-muted-foreground mb-2 opacity-50" />
-                <p className="text-muted-foreground">No recent activity</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Upload documents to see your activity here
-                </p>
-              </div>
-            )}
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" size="sm" className="w-full" asChild>
-              <Link href="/user/documents?tab=pending_submission">
-                <Upload className="h-4 w-4 mr-2" /> Upload Documents
-              </Link>
-            </Button>
-          </CardFooter>
-        </Card>
+      <div className="space-y-6">
+        {/* Document status badges */}
+        <div className="space-y-3">
+        {/* Show when all documents are uploaded */}
+        {dashboardData?.missingDocumentTypes &&
+          dashboardData.missingDocumentTypes.length === 0 && (
+            <div className="flex items-center gap-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-md px-3 py-1.5 w-fit">
+              <CheckCircle className="h-4 w-4" />
+              <span className="text-sm font-medium">
+                All documents uploaded
+              </span>
+            </div>
+          )}
+        
+        {/* Show when there are rejected documents */}
+        {dashboardData?.documentStats && dashboardData.documentStats.rejected > 0 && (
+          <Link href="/user/documents?tab=rejected">
+            <div className="flex items-center gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-md px-3 py-1.5 w-fit cursor-pointer hover:bg-red-100 dark:hover:bg-red-950/40 transition-colors">
+              <AlertCircle className="h-4 w-4" />
+              <span className="text-sm font-medium">
+                {dashboardData.documentStats.rejected} {dashboardData.documentStats.rejected === 1 ? 'document' : 'documents'} rejected
+              </span>
+            </div>
+          </Link>
+        )}
+        </div>
 
-        {/* Missing Documents */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Required Documents</CardTitle>
-            <CardDescription>Documents you need to upload</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {dashboardData?.missingDocumentTypes &&
-            dashboardData.missingDocumentTypes.length > 0 ? (
-              <div className="space-y-2">
-                {dashboardData.missingDocumentTypes.map((docType) => (
-                  <div
-                    key={docType}
-                    className="flex items-center justify-between p-2 bg-muted rounded-md"
-                  >
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-primary" />
-                      <span>{documentTypeNames[docType]}</span>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Activity */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>
+                Your latest document uploads and status changes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {dashboardData?.recentActivity &&
+              dashboardData.recentActivity.length > 0 ? (
+                <div className="space-y-4">
+                  {dashboardData.recentActivity.map((activity) => (
+                    <div
+                      key={activity.id}
+                      className="flex items-start gap-4 pb-4 border-b last:border-0 last:pb-0"
+                    >
+                      <div className="bg-primary/10 p-2 rounded-full">
+                        <FileText className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium">
+                            {documentTypeNames[activity.type]}
+                          </p>
+                          <StatusBadge status={activity.status} />
+                        </div>
+                        <p className="text-sm text-muted-foreground truncate max-w-[250px]">
+                          {activity.fileName}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {activity.reviewedAt
+                            ? `Reviewed ${formatDistanceToNow(
+                                new Date(activity.reviewedAt),
+                                { addSuffix: true }
+                              )}`
+                            : `Uploaded ${formatDistanceToNow(
+                                new Date(activity.uploadedAt),
+                                { addSuffix: true }
+                              )}`}
+                        </p>
+                      </div>
                     </div>
-                    <Button size="sm" variant="secondary" asChild>
-                      <Link href={`/user/documents?type=${docType}&open=true`}>
-                        Upload
-                      </Link>
-                    </Button>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <FileText className="h-10 w-10 text-muted-foreground mb-2 opacity-50" />
+                  <p className="text-muted-foreground">No recent activity</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Upload documents to see your activity here
+                  </p>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" size="sm" className="w-full" asChild>
+                <Link href="/user/documents?tab=pending_submission">
+                  <Upload className="h-4 w-4 mr-2" /> Upload Documents
+                </Link>
+              </Button>
+            </CardFooter>
+          </Card>
+
+          {/* Required Documents - Only show if there are missing documents */}
+          {dashboardData?.missingDocumentTypes &&
+            dashboardData.missingDocumentTypes.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Required Documents</CardTitle>
+                  <CardDescription>
+                    Documents you need to upload
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {dashboardData.missingDocumentTypes.map((docType) => (
+                      <div
+                        key={docType}
+                        className="flex items-center justify-between p-2 bg-muted rounded-md"
+                      >
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-primary" />
+                          <span>{documentTypeNames[docType]}</span>
+                        </div>
+                        <Button size="sm" variant="secondary" asChild>
+                          <Link
+                            href={`/user/documents?type=${docType}&open=true`}
+                          >
+                            Upload
+                          </Link>
+                        </Button>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-6 text-center">
-                <CheckCircle className="h-10 w-10 text-green-500 mb-2" />
-                <p className="font-medium">All required documents uploaded!</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Your documents are being reviewed
-                </p>
-              </div>
+                </CardContent>
+              </Card>
             )}
-          </CardContent>
-        </Card>
+        </div>
       </div>
     </div>
   );

@@ -201,9 +201,24 @@ export const columns: ColumnDef<UserTableData>[] = [
             )}
             <DropdownMenuItem
               variant="destructive"
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                console.log("Delete", user.id);
+                try {
+                  const response = await fetch(`/api/users/${user.id}`, {
+                    method: 'DELETE',
+                  });
+                  
+                  if (!response.ok) {
+                    throw new Error('Failed to delete user');
+                  }
+                  
+                  toast.success('User deleted successfully');
+                  // Invalidate and refetch users data
+                  queryClient.invalidateQueries({ queryKey: ['users'] });
+                } catch (error) {
+                  console.error('Error deleting user:', error);
+                  toast.error('Failed to delete user');
+                }
               }}
               className="flex items-center gap-2 text-destructive"
             >
