@@ -80,7 +80,6 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Personal Details</h3>
             <ProfileDetailsForm userData={userData} />
           </div>
         </CardContent>

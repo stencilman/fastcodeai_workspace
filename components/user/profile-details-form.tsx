@@ -24,9 +24,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, ExternalLink, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { FaLinkedin, FaSlack } from "react-icons/fa6";
 
 // Form schema with validation
 const formSchema = z.object({
@@ -42,12 +43,14 @@ const formSchema = z.object({
     .optional()
     .or(z.literal("")),
   bloodGroup: z.string().optional(),
+  slackUserId: z.string().optional().or(z.literal("")),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 interface ProfileDetailsFormProps {
   userData: User;
+  onSuccess?: () => void;
 }
 
 // Function to update user profile via API
@@ -91,30 +94,58 @@ const updateUserProfile = async (
   return response.json();
 };
 
-export function ProfileDetailsForm({ userData }: ProfileDetailsFormProps) {
-  const [formChanged, setFormChanged] = useState(false);
-  const queryClient = useQueryClient();
+// Helper function to convert database enum values to display values
+const getDisplayBloodGroup = (bloodGroup?: BloodGroup): string | undefined => {
+  if (!bloodGroup) return undefined;
 
-  // Convert database enum values to display values
-  const getDisplayBloodGroup = (
-    bloodGroup?: BloodGroup
-  ): string | undefined => {
-    if (!bloodGroup) return undefined;
-
-    // Map database enum values to display values
-    const bloodGroupMapping: Record<string, string> = {
-      A_POSITIVE: "A+",
-      A_NEGATIVE: "A-",
-      B_POSITIVE: "B+",
-      B_NEGATIVE: "B-",
-      AB_POSITIVE: "AB+",
-      AB_NEGATIVE: "AB-",
-      O_POSITIVE: "O+",
-      O_NEGATIVE: "O-",
-    };
-
-    return bloodGroupMapping[bloodGroup as string] || undefined;
+  // Map database enum values to display values
+  const bloodGroupMapping: Record<string, string> = {
+    A_POSITIVE: "A+",
+    A_NEGATIVE: "A-",
+    B_POSITIVE: "B+",
+    B_NEGATIVE: "B-",
+    AB_POSITIVE: "AB+",
+    AB_NEGATIVE: "AB-",
+    O_POSITIVE: "O+",
+    O_NEGATIVE: "O-",
   };
+
+  return bloodGroupMapping[bloodGroup as string] || undefined;
+};
+
+// Helper function to extract username from LinkedIn URL
+const extractLinkedInUsername = (url: string): string => {
+  try {
+    // Handle different LinkedIn URL formats
+    if (url.includes("linkedin.com/in/")) {
+      // Extract username from linkedin.com/in/username
+      const username = url
+        .split("linkedin.com/in/")[1]
+        .split("/")[0]
+        .split("?")[0];
+      return username;
+    } else if (url.includes("linkedin.com/company/")) {
+      // Extract company name from linkedin.com/company/company-name
+      const companyName = url
+        .split("linkedin.com/company/")[1]
+        .split("/")[0]
+        .split("?")[0];
+      return companyName;
+    }
+    // If we can't parse it, just return the URL
+    return url;
+  } catch (error) {
+    return url;
+  }
+};
+
+export function ProfileDetailsForm({
+  userData,
+  onSuccess,
+}: ProfileDetailsFormProps) {
+  const [formChanged, setFormChanged] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const queryClient = useQueryClient();
 
   // Initialize form with user data
   const defaultValues = {
@@ -122,6 +153,7 @@ export function ProfileDetailsForm({ userData }: ProfileDetailsFormProps) {
     address: userData.address || "",
     linkedinProfile: userData.linkedinProfile || "",
     bloodGroup: getDisplayBloodGroup(userData.bloodGroup),
+    slackUserId: userData.slackUserId || "",
   };
 
   const form = useForm<FormValues>({
@@ -142,6 +174,14 @@ export function ProfileDetailsForm({ userData }: ProfileDetailsFormProps) {
 
       // Reset the form change state since we've saved the changes
       setFormChanged(false);
+
+      // Exit edit mode
+      setIsEditing(false);
+
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
     },
     onError: (error) => {
       console.error("Error updating profile:", error);
@@ -162,7 +202,8 @@ export function ProfileDetailsForm({ userData }: ProfileDetailsFormProps) {
         value.phone !== defaultValues.phone ||
         value.address !== defaultValues.address ||
         value.linkedinProfile !== defaultValues.linkedinProfile ||
-        value.bloodGroup !== defaultValues.bloodGroup;
+        value.bloodGroup !== defaultValues.bloodGroup ||
+        value.slackUserId !== defaultValues.slackUserId;
 
       setFormChanged(hasChanged);
     });
@@ -176,106 +217,208 @@ export function ProfileDetailsForm({ userData }: ProfileDetailsFormProps) {
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Phone Number */}
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone Number</FormLabel>
-                <FormControl>
-                  <Input placeholder="+91 9876543210" {...field} />
-                </FormControl>
-                <FormDescription>Your contact phone number</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Blood Group */}
-          <FormField
-            control={form.control}
-            name="bloodGroup"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Blood Group</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value || ""}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your blood group" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
-                      (group) => (
-                        <SelectItem key={group} value={group}>
-                          {group}
-                        </SelectItem>
-                      )
-                    )}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Your blood group for emergency purposes
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* LinkedIn Profile */}
-          <FormField
-            control={form.control}
-            name="linkedinProfile"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>LinkedIn Profile</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="https://linkedin.com/in/username"
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>Your LinkedIn profile URL</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {/* Permanent Address */}
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Permanent Address</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Enter your permanent address"
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>
-                Your permanent residential address
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Profile Details</h3>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsEditing(!isEditing)}
+        >
+          {isEditing ? (
+            "Cancel"
+          ) : (
+            <>
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit
+            </>
           )}
-        />
-
-        <Button type="submit" disabled={isPending || !formChanged}>
-          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Save Changes
         </Button>
-      </form>
-    </Form>
+      </div>
+
+      {isEditing ? (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Phone Number */}
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="+91 9876543210" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Blood Group */}
+              <FormField
+                control={form.control}
+                name="bloodGroup"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Blood Group</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ""}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select blood group" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
+                          (group) => (
+                            <SelectItem key={group} value={group}>
+                              {group}
+                            </SelectItem>
+                          )
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* LinkedIn Profile */}
+              <FormField
+                control={form.control}
+                name="linkedinProfile"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>LinkedIn Profile</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="https://linkedin.com/in/username"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Slack User ID */}
+              <FormField
+                control={form.control}
+                name="slackUserId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Slack User ID</FormLabel>
+                    <FormControl>
+                      <Input placeholder="U01234ABC" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Permanent Address */}
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Permanent Address</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Enter permanent address"
+                      className="resize-none"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button type="submit" disabled={isPending || !formChanged}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Changes
+            </Button>
+          </form>
+        </Form>
+      ) : (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-1">
+              <h4 className="text-sm font-medium text-muted-foreground">
+                Phone
+              </h4>
+              <p>{userData.phone || "Not provided"}</p>
+            </div>
+
+            <div className="space-y-1">
+              <h4 className="text-sm font-medium text-muted-foreground">
+                Blood Group
+              </h4>
+              <p>
+                {getDisplayBloodGroup(userData.bloodGroup) || "Not provided"}
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <h4 className="text-sm font-medium text-muted-foreground">
+                LinkedIn Profile
+              </h4>
+              {userData.linkedinProfile ? (
+                <div className="flex items-center gap-1">
+                  <FaLinkedin className="h-4 w-4 text-[#0A66C2]" />
+                  <a
+                    href={userData.linkedinProfile}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline flex items-center gap-1"
+                  >
+                    {extractLinkedInUsername(userData.linkedinProfile)}
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              ) : (
+                <p>Not provided</p>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <h4 className="text-sm font-medium text-muted-foreground">
+                Slack ID
+              </h4>
+              {userData.slackUserId ? (
+                <div className="flex items-center gap-1">
+                  <FaSlack className="h-4 w-4 text-[#4A154B]" />
+                  <a
+                    href={`https://fastcodeai.slack.com/team/${userData.slackUserId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline flex items-center gap-1"
+                  >
+                    {userData.slackUserId}
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              ) : (
+                <p>Not provided</p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <h4 className="text-sm font-medium text-muted-foreground">
+              Address
+            </h4>
+            <p className="whitespace-pre-wrap">
+              {userData.address || "Not provided"}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
