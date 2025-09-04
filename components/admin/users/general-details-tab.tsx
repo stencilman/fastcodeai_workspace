@@ -70,7 +70,8 @@ export function GeneralDetailsTab() {
 
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return "N/A";
-    return dateString.split("T")[0];
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
   };
 
   const extractLinkedInUsername = (url: string): string => {

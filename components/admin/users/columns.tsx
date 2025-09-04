@@ -112,8 +112,8 @@ export const columns: ColumnDef<UserTableData>[] = [
     header: "Created",
     cell: ({ row }) => {
       const date = row.getValue("createdAt") as Date;
-      // Use explicit date format to avoid hydration errors
-      return <span>{date.toISOString().split("T")[0]}</span>;
+      // Format as DD/MM/YYYY
+      return <span>{new Date(date).toLocaleDateString('en-GB')}</span>;
     },
     size: 100,
   },
@@ -122,8 +122,8 @@ export const columns: ColumnDef<UserTableData>[] = [
     header: "Updated",
     cell: ({ row }) => {
       const date = row.getValue("updatedAt") as Date;
-      // Use explicit date format to avoid hydration errors
-      return <span>{date.toISOString().split("T")[0]}</span>;
+      // Format as DD/MM/YYYY
+      return <span>{new Date(date).toLocaleDateString('en-GB')}</span>;
     },
     size: 100,
   },
