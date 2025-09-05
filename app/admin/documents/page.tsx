@@ -61,13 +61,9 @@ const StatusBadge = ({ status }: { status: DocumentStatus }) => {
   );
 };
 
-// Function to fetch documents from the API
-const fetchDocuments = async (status?: string): Promise<any> => {
-  const url = status && status !== "all" 
-    ? `/api/admin/documents?status=${status}` 
-    : "/api/admin/documents";
-  
-  const response = await fetch(url);
+// Function to fetch all documents from the API
+const fetchAllDocuments = async (): Promise<any> => {
+  const response = await fetch("/api/admin/documents");
   
   if (!response.ok) {
     throw new Error("Failed to fetch documents");
@@ -97,7 +93,7 @@ export default function AdminDocumentsPage() {
   const [processingDocumentId, setProcessingDocumentId] = useState<string | null>(null);
   const [processingAction, setProcessingAction] = useState<"approve" | "reject" | null>(null);
 
-  // Map tab values to document status for API filtering
+  // Map tab values to document status for client-side filtering
   const tabToStatus: Record<string, string | undefined> = {
     all: undefined,
     pending: DocumentStatus.PENDING,
@@ -105,17 +101,39 @@ export default function AdminDocumentsPage() {
     rejected: DocumentStatus.REJECTED,
   };
 
-  // Fetch documents based on active tab
+  // Fetch all documents once
   const {
     data,
     isLoading,
     error,
     refetch
   } = useQuery({
-    queryKey: ["adminDocuments", activeTab],
-    queryFn: () => fetchDocuments(tabToStatus[activeTab]),
-    staleTime: 1000 * 60 * 5, // Data remains fresh for 5 minutes
-    gcTime: 1000 * 60 * 10, // Cache data for 10 minutes (formerly cacheTime)
+    queryKey: ["adminDocuments"],
+    queryFn: fetchAllDocuments,
+    staleTime: 0, // Consider data stale immediately
+    refetchOnMount: 'always', // Always refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+  });
+  
+  // Define the expected data structure
+  interface DocumentsResponse {
+    documents: Document[];
+    counts: {
+      total: number;
+      pending: number;
+      approved: number;
+      rejected: number;
+    };
+  }
+  
+  // Get all documents from the response
+  const allDocuments = ((data as DocumentsResponse)?.documents) || [];
+  const allCounts = ((data as DocumentsResponse)?.counts) || { total: 0, pending: 0, approved: 0, rejected: 0 };
+  
+  // Filter documents based on active tab - client-side filtering
+  const filteredDocuments = allDocuments.filter((doc: Document) => {
+    if (activeTab === "all") return true;
+    return doc.status === tabToStatus[activeTab];
   });
 
   // DocumentCard component handles preview internally
@@ -179,21 +197,14 @@ export default function AdminDocumentsPage() {
       </div>
     );
   }
-
-  // Define the expected data structure
-  interface DocumentsResponse {
-    documents: Document[];
-    counts: {
-      total: number;
-      pending: number;
-      approved: number;
-      rejected: number;
-    };
-  }
   
-  // Cast data to the expected type with fallback values
-  const documents = ((data as DocumentsResponse)?.documents) || [];
-  const counts = ((data as DocumentsResponse)?.counts) || { total: 0, pending: 0, approved: 0, rejected: 0 };
+  // Calculate counts for the tabs
+  const counts = {
+    total: allDocuments.length,
+    pending: allDocuments.filter(doc => doc.status === DocumentStatus.PENDING).length,
+    approved: allDocuments.filter(doc => doc.status === DocumentStatus.APPROVED).length,
+    rejected: allDocuments.filter(doc => doc.status === DocumentStatus.REJECTED).length
+  };
 
   return (
     <div className="space-y-6">
@@ -263,11 +274,11 @@ export default function AdminDocumentsPage() {
           </TabsList>
         </div>
 
-        {/* Document list - same for all tabs, filtering is done by the API */}
+        {/* Document list - filtering is now done client-side */}
         <TabsContent value={activeTab} className="mt-6">
-          {documents.length > 0 ? (
+          {filteredDocuments.length > 0 ? (
             <div className="space-y-4">
-              {documents.map((doc) => (
+              {filteredDocuments.map((doc: Document) => (
                 <DocumentCard
                   key={doc.id}
                   document={doc}

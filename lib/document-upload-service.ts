@@ -7,8 +7,8 @@ const CACHE_EXPIRY_MS = 15 * 60 * 1000; // 15 minutes
 export async function initiateDocumentUpload(
     file: File,
     docType: DocumentType
-): Promise<{ documentId: string; uploadUrl: string }> {
-    // Step 1: Create document record and get upload URL
+): Promise<{ documentId: string }> {
+    // Step 1: Create document record
     const response = await fetch('/api/documents', {
         method: 'POST',
         headers: {
@@ -27,41 +27,29 @@ export async function initiateDocumentUpload(
         throw new Error(error.error || 'Failed to initiate upload');
     }
 
-    const { document, uploadUrl } = await response.json();
+    const { document } = await response.json();
 
-    return { documentId: document.id, uploadUrl };
+    return { documentId: document.id };
 }
 
-export async function uploadFileToS3(file: File, uploadUrl: string): Promise<void> {
-    // Check if this is a local upload URL (starts with /api/)
-    if (uploadUrl.startsWith('/api/')) {
-        // Local file upload to our API endpoint
-        const formData = new FormData();
-        formData.append('file', file);
+export async function uploadFileToS3(file: File, documentId: string): Promise<string> {
+    // Create form data
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Upload to backend API which will handle S3 upload
+    const uploadResponse = await fetch(`/api/documents/upload?documentId=${documentId}`, {
+        method: 'POST',
+        body: formData,
+    });
 
-        const uploadResponse = await fetch(uploadUrl, {
-            method: 'POST',
-            body: formData,
-        });
-
-        if (!uploadResponse.ok) {
-            const error = await uploadResponse.json();
-            throw new Error(error.error || 'Failed to upload file');
-        }
-    } else {
-        // S3 direct upload using presigned URL
-        const uploadResponse = await fetch(uploadUrl, {
-            method: 'PUT',
-            body: file,
-            headers: {
-                'Content-Type': file.type,
-            },
-        });
-
-        if (!uploadResponse.ok) {
-            throw new Error('Failed to upload file to S3');
-        }
+    if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || 'Failed to upload file to S3');
     }
+    
+    const data = await uploadResponse.json();
+    return data.url; // Return the URL for the uploaded file
 }
 
 export async function getDocumentUrl(documentId: string): Promise<string> {

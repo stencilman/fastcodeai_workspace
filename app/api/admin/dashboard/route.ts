@@ -3,9 +3,11 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { DocumentStatus, DocumentType } from '@/models/document';
 import { UserRole } from '@/models/user';
+import { cache } from '@/lib/cache';
 
 // Get dashboard data for admin
 export async function GET(req: NextRequest) {
+    const startTime = Date.now();
     const session = await auth();
     
     // Check if user is authenticated and is an admin
@@ -23,121 +25,158 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
         }
 
-        // Get user statistics
-        const userCount = await db.user.count({
-            where: { role: 'USER' }
-        });
+        // Check if we have a cached response (30 second TTL)
+        const cacheKey = `admin-dashboard-${currentUser.id}`;
+        const cachedData = cache.get(cacheKey);
         
-        const newUsersThisWeek = await db.user.count({
-            where: {
-                role: 'USER',
-                createdAt: {
-                    gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
-                }
-            }
-        });
+        if (cachedData) {
+            console.log(`Dashboard data served from cache in ${Date.now() - startTime}ms`);
+            return NextResponse.json(cachedData);
+        }
 
-        const usersWithIncompleteOnboarding = await db.user.count({
-            where: {
-                role: 'USER',
-                onboardingStatus: {
-                    not: 'COMPLETED'
-                }
-            }
-        });
-
-        // Get document statistics
-        const totalDocuments = await db.document.count();
+        // Run all major queries in parallel using Promise.all
+        const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
         
-        const documentStats = {
-            total: totalDocuments,
-            pending: await db.document.count({ where: { status: DocumentStatus.PENDING } }),
-            approved: await db.document.count({ where: { status: DocumentStatus.APPROVED } }),
-            rejected: await db.document.count({ where: { status: DocumentStatus.REJECTED } })
-        };
-
-        // Calculate approval rate
-        const approvalRate = totalDocuments > 0 
-            ? Math.round((documentStats.approved / totalDocuments) * 100) 
-            : 0;
-        
-        // Get documents pending review
-        const pendingReviewCount = await db.document.count({
-            where: { status: DocumentStatus.PENDING }
-        });
-
-        // Get recent activity (last 10 document uploads or status changes)
-        const recentDocumentActivity = await db.document.findMany({
-            orderBy: { uploadedAt: 'desc' },
-            take: 10,
-            include: {
-                user: {
-                    select: {
-                        name: true,
-                        email: true
+        // Define all the queries we'll run in parallel
+        const [
+            // User statistics
+            userStats,
+            // Document statistics
+            documentStats,
+            // Recent document activity
+            recentDocumentActivity,
+            // Document type distribution
+            documentTypeGroups,
+            // Recent users
+            recentUsers
+        ] = await Promise.all([
+            // 1. User statistics
+            db.$transaction([
+                db.user.count({ where: { role: 'USER' } }),
+                db.user.count({ where: { role: 'USER', createdAt: { gte: oneWeekAgo } } }),
+                db.user.count({ where: { role: 'USER', onboardingStatus: { not: 'COMPLETED' } } })
+            ]),
+            
+            // 2. Document statistics
+            db.$transaction([
+                db.document.count(),
+                db.document.count({ where: { status: DocumentStatus.PENDING } }),
+                db.document.count({ where: { status: DocumentStatus.APPROVED } }),
+                db.document.count({ where: { status: DocumentStatus.REJECTED } })
+            ]),
+            
+            // 3. Recent document activity
+            db.document.findMany({
+                orderBy: { uploadedAt: 'desc' },
+                take: 10,
+                include: {
+                    user: {
+                        select: {
+                            name: true,
+                            email: true
+                        }
                     }
                 }
-            }
-        });
-        
-        // Process the document activity to include reviewer information
-        const processedActivity = await Promise.all(recentDocumentActivity.map(async (doc) => {
-            let reviewerName = null;
-            if (doc.reviewedBy) {
-                const reviewer = await db.user.findUnique({
-                    where: { id: doc.reviewedBy },
-                    select: { name: true }
-                });
-                reviewerName = reviewer?.name;
-            }
+            }),
             
+            // 4. Document type distribution
+            db.document.groupBy({
+                by: ['type'],
+                _count: {
+                    _all: true
+                }
+            }),
+            
+            // 5. Recent users
+            db.user.findMany({
+                where: { role: 'USER' },
+                orderBy: { createdAt: 'desc' },
+                take: 5,
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    createdAt: true,
+                    onboardingStatus: true
+                }
+            })
+        ]);
+        
+        // Process user statistics
+        const [userCount, newUsersThisWeek, usersWithIncompleteOnboarding] = userStats;
+        
+        // Process document statistics
+        const [totalDocuments, pendingCount, approvedCount, rejectedCount] = documentStats;
+        
+        const documentStatsObj = {
+            total: totalDocuments,
+            pending: pendingCount,
+            approved: approvedCount,
+            rejected: rejectedCount
+        };
+        
+        // Calculate approval rate
+        const approvalRate = totalDocuments > 0 
+            ? Math.round((documentStatsObj.approved / totalDocuments) * 100) 
+            : 0;
+        
+        // Process document activity with reviewer information
+        // Get all unique reviewer IDs from the documents
+        const reviewerIds = recentDocumentActivity
+            .filter(doc => doc.reviewedBy)
+            .map(doc => doc.reviewedBy as string);
+        
+        // If we have reviewers, fetch them all at once
+        let reviewerMap = new Map();
+        if (reviewerIds.length > 0) {
+            const reviewers = await db.user.findMany({
+                where: { id: { in: reviewerIds } },
+                select: { id: true, name: true }
+            });
+            reviewerMap = new Map(reviewers.map(r => [r.id, r.name]));
+        }
+        
+        // Process the document activity with the reviewer map
+        const processedActivity = recentDocumentActivity.map(doc => {
+            const reviewerName = doc.reviewedBy ? reviewerMap.get(doc.reviewedBy) : null;
             return {
                 ...doc,
-                userId: doc.userId, // Explicitly include userId for the frontend
+                userId: doc.userId,
                 reviewer: reviewerName ? { name: reviewerName } : null
             };
-        }));
-
-        // Get document counts by type
-        const documentsByType = await Promise.all(
-            Object.values(DocumentType).map(async (type) => {
-                const count = await db.document.count({ where: { type } });
-                return { type, count };
-            })
-        );
-
-        // Get recent user registrations
-        const recentUsers = await db.user.findMany({
-            where: { role: 'USER' },
-            orderBy: { createdAt: 'desc' },
-            take: 5,
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                createdAt: true,
-                onboardingStatus: true
-            }
         });
-
-        return NextResponse.json({
+        
+        // Format document type distribution
+        const documentsByType = Object.values(DocumentType).map(type => {
+            const found = documentTypeGroups.find(group => group.type === type);
+            return {
+                type,
+                count: found ? found._count._all : 0
+            };
+        });
+        
+        // Prepare the response data
+        const responseData = {
             userStats: {
                 totalUsers: userCount,
-                newUsersThisWeek: newUsersThisWeek,
+                newUsersThisWeek,
                 incompleteOnboarding: usersWithIncompleteOnboarding
             },
-            documentStats: {
-                total: totalDocuments,
-                pending: documentStats.pending,
-                approved: documentStats.approved,
-                rejected: documentStats.rejected
-            },
+            documentStats: documentStatsObj,
             approvalRate,
-            pendingReview: documentStats.pending,
+            pendingReview: pendingCount,
             recentDocumentActivity: processedActivity,
             documentsByType,
             recentUsers
-        });
+        };
+        
+        // Cache the response for 30 seconds
+        cache.set(cacheKey, responseData, 30);
+        
+        // Log the response time
+        console.log(`Dashboard data generated in ${Date.now() - startTime}ms`);
+        
+        return NextResponse.json(responseData);
     } catch (error) {
         console.error('Error fetching admin dashboard data:', error);
         return NextResponse.json(

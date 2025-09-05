@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { getUserById } from '@/data/user';
 import { DocumentStatus, DocumentType } from '@/models/document';
 import { OnboardingStatus } from '@/models/user';
+import { cache } from '@/lib/cache';
 
 // Calculate profile completion percentage based on filled fields
 function calculateProfileCompletion(user: any): number {
@@ -32,6 +33,7 @@ function calculateProfileCompletion(user: any): number {
 
 // Get dashboard data for the current user
 export async function GET(req: NextRequest) {
+    const startTime = Date.now();
     const session = await auth();
     if (!session?.user?.email) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -46,12 +48,42 @@ export async function GET(req: NextRequest) {
         if (!user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
-
-        // Get user's documents
-        const documents = await db.document.findMany({
-            where: { userId: user.id },
-            orderBy: { uploadedAt: 'desc' },
-        });
+        
+        // Check if we have a cached response (30 second TTL)
+        const cacheKey = `user-dashboard-${user.id}`;
+        const cachedData = cache.get(cacheKey);
+        
+        if (cachedData) {
+            console.log(`User dashboard data served from cache in ${Date.now() - startTime}ms`);
+            return NextResponse.json(cachedData);
+        }
+        
+        // Run all queries in parallel using Promise.all
+        const [
+            // Get all user documents in a single query
+            documents,
+            // Get recent activity in a separate query
+            recentActivity
+        ] = await Promise.all([
+            db.document.findMany({
+                where: { userId: user.id },
+                orderBy: { uploadedAt: 'desc' },
+            }),
+            
+            db.document.findMany({
+                where: { userId: user.id },
+                orderBy: { uploadedAt: 'desc' },
+                take: 5,
+                select: {
+                    id: true,
+                    type: true,
+                    status: true,
+                    uploadedAt: true,
+                    reviewedAt: true,
+                    fileName: true
+                }
+            })
+        ]);
 
         // Calculate document statistics
         const documentStats = {
@@ -71,27 +103,10 @@ export async function GET(req: NextRequest) {
         // Calculate profile completion
         const profileCompletion = calculateProfileCompletion(user);
 
-        // Get recent activity (last 5 document uploads or status changes)
-        const recentActivity = await db.document.findMany({
-            where: { userId: user.id },
-            orderBy: { uploadedAt: 'desc' },
-            take: 5,
-            select: {
-                id: true,
-                type: true,
-                status: true,
-                uploadedAt: true,
-                reviewedAt: true,
-                fileName: true
-            }
-        });
-
         // Calculate onboarding status
-        // Use the user's onboardingStatus field if it's COMPLETED, otherwise calculate based on documents
         const documentsCompletion = Math.round((uploadedDocumentTypes.length / requiredDocumentTypes.length) * 100);
         
         // Handle onboardingStatus with type safety
-        // Since we just updated the schema, TypeScript might not recognize the field yet
         const userOnboardingStatus = (user as any).onboardingStatus || OnboardingStatus.IN_PROGRESS;
         
         const onboardingStatus = {
@@ -103,7 +118,7 @@ export async function GET(req: NextRequest) {
             documentsCompletion: documentsCompletion
         };
 
-        return NextResponse.json({
+        const responseData = {
             user: {
                 id: user.id,
                 name: user.name,
@@ -116,7 +131,15 @@ export async function GET(req: NextRequest) {
             profileCompletion,
             recentActivity,
             onboardingStatus
-        });
+        };
+        
+        // Cache the response for 30 seconds
+        cache.set(cacheKey, responseData, 30);
+        
+        // Log the response time
+        console.log(`User dashboard data generated in ${Date.now() - startTime}ms`);
+        
+        return NextResponse.json(responseData);
     } catch (error) {
         console.error('Error fetching dashboard data:', error);
         return NextResponse.json(

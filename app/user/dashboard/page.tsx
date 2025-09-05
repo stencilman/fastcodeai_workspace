@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import {
   Card,
@@ -99,36 +100,33 @@ const StatusBadge = ({ status }: { status: DocumentStatus }) => {
 
 export default function UserDashboardPage() {
   const { data: session, status } = useSession();
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
-    null
-  );
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch("/api/users/dashboard");
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch dashboard data");
-        }
-
-        const data = await response.json();
-        setDashboardData(data);
-      } catch (err) {
-        console.error("Error fetching dashboard data:", err);
-        setError("Failed to load dashboard data. Please try again later.");
-      } finally {
-        setIsLoading(false);
+  
+  // Use React Query for data fetching with caching
+  const { data: dashboardData, isLoading, error } = useQuery<DashboardData, Error>({
+    queryKey: ['userDashboard'],
+    queryFn: async () => {
+      const response = await fetch("/api/users/dashboard");
+      if (!response.ok) {
+        throw new Error("Failed to fetch dashboard data");
       }
-    };
-
-    if (status === "authenticated") {
-      fetchDashboardData();
-    }
-  }, [status]);
+      return response.json();
+    },
+    enabled: status === "authenticated",
+    staleTime: 30000, // 30 seconds
+    refetchOnWindowFocus: true,
+  });
+  
+  // Memoize recent activity data to prevent unnecessary re-renders
+  const memoizedRecentActivity = useMemo(() => {
+    if (!dashboardData?.recentActivity) return [];
+    return dashboardData.recentActivity;
+  }, [dashboardData?.recentActivity]);
+  
+  // Memoize missing document types
+  const memoizedMissingDocuments = useMemo(() => {
+    if (!dashboardData?.missingDocumentTypes) return [];
+    return dashboardData.missingDocumentTypes;
+  }, [dashboardData?.missingDocumentTypes]);
 
   // Loading state
   if (status === "loading" || isLoading) {
@@ -172,7 +170,7 @@ export default function UserDashboardPage() {
         <p className="text-muted-foreground mb-4">
           {status === "unauthenticated"
             ? "You need to be signed in to access this page"
-            : error || "Something went wrong"}
+            : error instanceof Error ? error.message : "Something went wrong"}
         </p>
         <Button asChild>
           <Link
@@ -400,7 +398,7 @@ export default function UserDashboardPage() {
               {dashboardData?.recentActivity &&
               dashboardData.recentActivity.length > 0 ? (
                 <div className="space-y-4">
-                  {dashboardData.recentActivity.map((activity) => (
+                  {memoizedRecentActivity.map((activity) => (
                     <div
                       key={activity.id}
                       className="flex items-start gap-4 pb-4 border-b last:border-0 last:pb-0"
@@ -453,8 +451,7 @@ export default function UserDashboardPage() {
           </Card>
 
           {/* Required Documents - Only show if there are missing documents */}
-          {dashboardData?.missingDocumentTypes &&
-            dashboardData.missingDocumentTypes.length > 0 && (
+          {memoizedMissingDocuments.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle>Required Documents</CardTitle>
@@ -464,7 +461,7 @@ export default function UserDashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {dashboardData.missingDocumentTypes.map((docType) => (
+                    {memoizedMissingDocuments.map((docType) => (
                       <div
                         key={docType}
                         className="flex items-center justify-between p-2 bg-muted rounded-md"

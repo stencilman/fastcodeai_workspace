@@ -1,82 +1,92 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsV2Command, ListObjectsV2CommandOutput } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as crypto from 'crypto';
 
 export class S3Service {
-    private s3Client: S3Client | null = null;
-    private bucketName: string = '';
-    private useLocalStorage: boolean = true;
-    private uploadsDir: string = path.join(process.cwd(), 'uploads');
+    private s3Client: S3Client;
+    private bucketName: string;
+    private region: string;
 
     constructor() {
-        // Check if we're using local storage or S3
-        if (process.env.S3_BUCKET_NAME && !process.env.USE_LOCAL_STORAGE) {
-            this.useLocalStorage = false;
-            this.bucketName = process.env.S3_BUCKET_NAME;
-
+        try {
+            // Validate required environment variables
+            if (!process.env.AWS_S3_BUCKET_NAME) {
+                throw new Error('AWS_S3_BUCKET_NAME environment variable is required');
+            }
+            
+            if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+                throw new Error('AWS credentials not found. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables.');
+            }
+            
+            this.bucketName = process.env.AWS_S3_BUCKET_NAME;
+            this.region = process.env.AWS_REGION || 'us-east-1';
+            
             this.s3Client = new S3Client({
-                region: process.env.AWS_REGION || 'us-east-1',
+                region: this.region,
                 credentials: {
-                    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-                    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+                    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
                 },
             });
-        } else {
-            // Ensure uploads directory exists
-            if (!fs.existsSync(this.uploadsDir)) {
-                fs.mkdirSync(this.uploadsDir, { recursive: true });
-            }
-            console.log('Using local storage for files in:', this.uploadsDir);
+            
+            console.log(`Initialized S3 client for bucket: ${this.bucketName} in region: ${this.region}`);
+        } catch (error) {
+            console.error('Error initializing S3Service:', error);
+            throw error; // Re-throw to prevent usage of an improperly initialized service
         }
     }
 
     // Generate a pre-signed URL for uploading a file directly to S3
     async getPresignedUploadUrl(key: string, contentType: string, expiresIn = 3600): Promise<string> {
-        if (!this.useLocalStorage && this.s3Client) {
-            const command = new PutObjectCommand({
-                Bucket: this.bucketName,
-                Key: key,
-                ContentType: contentType,
-            });
-            return getSignedUrl(this.s3Client, command, { expiresIn });
-        } else {
-            // For local storage, generate a token that can be used with a local API endpoint
-            const token = this.generateToken(key, expiresIn);
-            return `/api/documents/upload?token=${token}`;
-        }
+        const command = new PutObjectCommand({
+            Bucket: this.bucketName,
+            Key: key,
+            ContentType: contentType,
+        });
+
+        return await getSignedUrl(this.s3Client, command, { expiresIn });
     }
 
-    // Generate a pre-signed URL for downloading/viewing a file
+    // Generate a pre-signed URL for downloading a file from S3
     async getPresignedDownloadUrl(key: string, expiresIn = 3600): Promise<string> {
-        if (!this.useLocalStorage && this.s3Client) {
-            const command = new GetObjectCommand({
-                Bucket: this.bucketName,
-                Key: key,
-            });
-            return getSignedUrl(this.s3Client, command, { expiresIn });
-        } else {
-            // For local storage, generate a token that can be used with a local API endpoint
-            const token = this.generateToken(key, expiresIn);
-            return `/api/documents/file?token=${token}`;
-        }
+        const command = new GetObjectCommand({
+            Bucket: this.bucketName,
+            Key: key,
+        });
+
+        return await getSignedUrl(this.s3Client, command, { expiresIn });
     }
 
-    // Delete a file from S3 or local storage
+    // Delete a file from S3
     async deleteFile(key: string): Promise<void> {
-        if (!this.useLocalStorage && this.s3Client) {
+        try {
             const command = new DeleteObjectCommand({
                 Bucket: this.bucketName,
                 Key: key,
             });
             await this.s3Client.send(command);
-        } else {
-            // Delete from local storage
-            const filePath = this.getLocalFilePath(key);
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-            }
+        } catch (error) {
+            console.error(`Error deleting file ${key} from S3:`, error);
+            throw new Error(`Failed to delete file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+    
+    // Upload a file directly to S3 from the backend
+    async uploadFile(key: string, fileBuffer: Buffer, contentType: string): Promise<void> {
+        try {
+            console.log(`Uploading file to S3: ${key}, content type: ${contentType}`);
+            
+            const command = new PutObjectCommand({
+                Bucket: this.bucketName,
+                Key: key,
+                Body: fileBuffer,
+                ContentType: contentType,
+            });
+            
+            await this.s3Client.send(command);
+            console.log(`Successfully uploaded file to S3: ${key}`);
+        } catch (error) {
+            console.error(`Error uploading file ${key} to S3:`, error);
+            throw new Error(`Failed to upload file to S3: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
@@ -87,72 +97,73 @@ export class S3Service {
         return `documents/${userId}/${docType}_${timestamp}.${extension}`;
     }
 
-    // Save a file to local storage (used by the upload API endpoint)
-    async saveLocalFile(key: string, fileBuffer: Buffer): Promise<void> {
-        const filePath = this.getLocalFilePath(key);
-        const dirPath = path.dirname(filePath);
-
-        // Ensure directory exists
-        if (!fs.existsSync(dirPath)) {
-            fs.mkdirSync(dirPath, { recursive: true });
-        }
-
-        // Write file
-        fs.writeFileSync(filePath, fileBuffer);
-    }
-
-    // Get a file from local storage (used by the file API endpoint)
-    getLocalFile(key: string): Buffer | null {
-        const filePath = this.getLocalFilePath(key);
-        if (fs.existsSync(filePath)) {
-            return fs.readFileSync(filePath);
-        }
-        return null;
-    }
-
-    // Verify a token is valid
-    verifyToken(token: string): string | null {
+    // List all objects in the S3 bucket with optional prefix
+    async listObjects(prefix?: string): Promise<{ Key: string, Size: number, LastModified?: Date }[]> {
         try {
-            const [key, timestamp, signature] = token.split('.');
-            const keyDecoded = Buffer.from(key, 'base64').toString();
-            const timestampNum = parseInt(timestamp, 10);
-
-            // Check if expired
-            if (Date.now() > timestampNum) {
-                return null;
-            }
-
-            // Verify signature
-            const expectedSignature = this.generateSignature(keyDecoded, timestamp);
-            if (signature !== expectedSignature) {
-                return null;
-            }
-
-            return keyDecoded;
+            console.log(`Listing objects from bucket: ${this.bucketName} with prefix: ${prefix || 'none'}`);
+            
+            const command = new ListObjectsV2Command({
+                Bucket: this.bucketName,
+                Prefix: prefix,
+                MaxKeys: 1000,
+            });
+            
+            const response: ListObjectsV2CommandOutput = await this.s3Client.send(command);
+            
+            const objects = (response.Contents || []).map(item => ({
+                Key: item.Key || '',
+                Size: item.Size || 0,
+                LastModified: item.LastModified,
+            }));
+            
+            console.log(`Successfully listed ${objects.length} objects from S3`);
+            return objects;
         } catch (error) {
-            return null;
+            // Log detailed error information
+            if (error instanceof Error) {
+                console.error(`Error listing objects from S3 bucket ${this.bucketName}:`, {
+                    message: error.message,
+                    name: error.name,
+                    stack: error.stack,
+                });
+            } else {
+                console.error('Unknown error listing objects from S3:', error);
+            }
+            throw new Error(`Failed to list objects from S3: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
-
-    // Private helper methods
-    private getLocalFilePath(key: string): string {
-        // Remove 'documents/' prefix if present since we're already in the uploads folder
-        const relativePath = key.startsWith('documents/') ? key.substring(10) : key;
-        return path.join(this.uploadsDir, relativePath);
+    
+    // Delete multiple objects from S3 bucket
+    async deleteObjects(keys: string[]): Promise<{ Deleted: string[], Errors: string[] }> {
+        const deleted: string[] = [];
+        const errors: string[] = [];
+        
+        // Delete from S3
+        for (const key of keys) {
+            try {
+                const command = new DeleteObjectCommand({
+                    Bucket: this.bucketName,
+                    Key: key,
+                });
+                await this.s3Client.send(command);
+                deleted.push(key);
+            } catch (error) {
+                console.error(`Error deleting object ${key} from S3:`, error);
+                errors.push(key);
+            }
+        }
+        
+        return {
+            Deleted: deleted,
+            Errors: errors,
+        };
     }
-
-    private generateToken(key: string, expiresIn: number): string {
-        const keyEncoded = Buffer.from(key).toString('base64');
-        const expiryTimestamp = (Date.now() + expiresIn * 1000).toString();
-        const signature = this.generateSignature(key, expiryTimestamp);
-        return `${keyEncoded}.${expiryTimestamp}.${signature}`;
-    }
-
-    private generateSignature(key: string, timestamp: string): string {
-        const secret = process.env.JWT_SECRET || 'local-dev-secret';
-        return crypto
-            .createHmac('sha256', secret)
-            .update(`${key}.${timestamp}`)
-            .digest('hex');
+    
+    // Get bucket information
+    getBucketInfo(): { bucketName: string, region: string } {
+        return {
+            bucketName: this.bucketName,
+            region: this.region,
+        };
     }
 }

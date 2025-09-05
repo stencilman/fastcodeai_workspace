@@ -141,7 +141,8 @@ export function DocumentCard({
 
   // Get status badge color
   const getStatusBadge = () => {
-    switch (document.status) {
+    // Use localDocumentStatus instead of document.status for immediate feedback
+    switch (localDocumentStatus) {
       case DocumentStatus.PENDING:
         return (
           <Badge
@@ -241,9 +242,13 @@ export function DocumentCard({
 
   const handleApprove = async () => {
     try {
+      // Only update status after successful API response
       await onApprove(document.id);
+      // Update local status after successful API call
+      setLocalDocumentStatus(DocumentStatus.APPROVED);
     } catch (error) {
       console.error("Error approving document:", error);
+      // Status remains unchanged since we only update after success
     }
   };
 
@@ -261,10 +266,14 @@ export function DocumentCard({
     setRejectionDialogOpen(false);
 
     try {
+      // Only update status after successful API response
       await onReject(document.id, rejectionReason);
+      // Update local status after successful API call
+      setLocalDocumentStatus(DocumentStatus.REJECTED);
       setRejectionReason(""); // Reset the reason after submission
     } catch (error) {
       console.error("Error rejecting document:", error);
+      // Status remains unchanged since we only update after success
     }
   };
 

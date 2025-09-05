@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { S3Service } from '@/lib/s3-service';
 import { db } from '@/lib/db';
+import { DocumentStatus } from '@/models/document';
 
 const s3Service = new S3Service();
 
@@ -15,18 +16,30 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        // Get token from query params
+        // Get document ID from query params
         const url = new URL(req.url);
-        const token = url.searchParams.get('token');
+        const documentId = url.searchParams.get('documentId');
 
-        if (!token) {
-            return NextResponse.json({ error: 'Missing token' }, { status: 400 });
+        if (!documentId) {
+            return NextResponse.json({ error: 'Missing document ID' }, { status: 400 });
         }
 
-        // Verify token and get file key
-        const key = s3Service.verifyToken(token);
-        if (!key) {
-            return NextResponse.json({ error: 'Invalid or expired token' }, { status: 403 });
+        // Find the document in the database
+        const document = await db.document.findUnique({
+            where: { id: documentId }
+        });
+
+        if (!document) {
+            return NextResponse.json({ error: 'Document not found' }, { status: 404 });
+        }
+
+        // Verify user owns this document
+        const user = await db.user.findUnique({
+            where: { email: session.user.email }
+        });
+
+        if (!user || (user.id !== document.userId && user.role !== 'ADMIN')) {
+            return NextResponse.json({ error: 'Not authorized to upload this document' }, { status: 403 });
         }
 
         // Parse form data
@@ -48,10 +61,23 @@ export async function POST(req: NextRequest) {
         // Convert file to buffer
         const fileBuffer = Buffer.from(await file.arrayBuffer());
 
-        // Save file to local storage
-        await s3Service.saveLocalFile(key, fileBuffer);
+        // Upload file directly to S3
+        await s3Service.uploadFile(document.s3Key, fileBuffer, document.fileType);
 
-        return NextResponse.json({ success: true, key });
+        // Update document status in database
+        await db.document.update({
+            where: { id: documentId },
+            data: { status: DocumentStatus.PENDING }
+        });
+
+        // Generate a URL for the frontend to use
+        const downloadUrl = await s3Service.getPresignedDownloadUrl(document.s3Key);
+
+        return NextResponse.json({ 
+            success: true, 
+            documentId,
+            url: downloadUrl
+        });
     } catch (error) {
         console.error('Error uploading file:', error);
         return NextResponse.json(

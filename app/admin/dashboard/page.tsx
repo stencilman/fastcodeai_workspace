@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -107,38 +108,61 @@ const StatusBadge = ({ status }: { status: DocumentStatus }) => {
   }
 };
 
+// Function to fetch dashboard data
+const fetchDashboardData = async (): Promise<AdminDashboardData> => {
+  const response = await fetch("/api/admin/dashboard");
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch dashboard data");
+  }
+
+  return response.json();
+};
+
 export default function AdminDashboardPage() {
   const { data: session, status } = useSession();
-  const [dashboardData, setDashboardData] = useState<AdminDashboardData | null>(
-    null
-  );
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch("/api/admin/dashboard");
+  // Use React Query for data fetching with caching
+  const {
+    data: dashboardData,
+    isLoading,
+    error,
+  } = useQuery<AdminDashboardData, Error>({
+    queryKey: ["adminDashboard"],
+    queryFn: fetchDashboardData,
+    enabled: status === "authenticated",
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    refetchOnWindowFocus: true,
+    retry: 1,
+  });
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch dashboard data");
-        }
+  // Memoize processed document activity to prevent unnecessary re-renders
+  const processedActivity = useMemo(() => {
+    if (!dashboardData?.recentDocumentActivity) return [];
 
-        const data = await response.json();
-        setDashboardData(data);
-      } catch (err) {
-        console.error("Error fetching dashboard data:", err);
-        setError("Failed to load dashboard data. Please try again later.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    return dashboardData.recentDocumentActivity.map((activity) => ({
+      ...activity,
+      formattedType:
+        documentTypeNames[activity.type as DocumentType] || activity.type,
+      formattedTime: activity.reviewedAt
+        ? `Reviewed ${formatDistanceToNow(new Date(activity.reviewedAt), {
+            addSuffix: true,
+          })} by ${activity.reviewer?.name || "Admin"}`
+        : `Uploaded ${formatDistanceToNow(new Date(activity.uploadedAt), {
+            addSuffix: true,
+          })}`,
+    }));
+  }, [dashboardData?.recentDocumentActivity]);
 
-    if (status === "authenticated") {
-      fetchDashboardData();
-    }
-  }, [status]);
+  // Memoize document type distribution
+  const formattedDocumentsByType = useMemo(() => {
+    if (!dashboardData?.documentsByType) return [];
+
+    return dashboardData.documentsByType.map((item) => ({
+      ...item,
+      formattedType: documentTypeNames[item.type as DocumentType] || item.type,
+    }));
+  }, [dashboardData?.documentsByType]);
 
   // Loading state
   if (status === "loading" || isLoading) {
@@ -149,21 +173,21 @@ export default function AdminDashboardPage() {
           <Skeleton className="h-4 w-72" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="pb-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="flex flex-col">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-4 rounded-full" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-8 w-16 mb-2" />
-                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-8 w-16 mb-4" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
               </CardContent>
             </Card>
           ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-64 w-full" />
         </div>
       </div>
     );
@@ -182,7 +206,9 @@ export default function AdminDashboardPage() {
         <p className="text-muted-foreground mb-4">
           {status === "unauthenticated"
             ? "You need to be signed in as an admin to access this page"
-            : error || "Something went wrong"}
+            : error instanceof Error
+            ? error.message
+            : "Something went wrong"}
         </p>
         <Button asChild>
           <Link
@@ -226,7 +252,8 @@ export default function AdminDashboardPage() {
               </Badge>
               <Badge variant="outline" className="flex items-center gap-1">
                 <UserCheck className="h-3 w-3" />{" "}
-                {dashboardData?.userStats.incompleteOnboarding || 0} Incomplete onboarding
+                {dashboardData?.userStats.incompleteOnboarding || 0} Incomplete
+                onboarding
               </Badge>
             </div>
           </CardContent>
@@ -276,8 +303,8 @@ export default function AdminDashboardPage() {
               className="w-full justify-start"
               asChild
             >
-              <Link href="/admin/users">
-                Manage Users & Documents <ArrowRight className="ml-auto h-4 w-4" />
+              <Link href="/admin/documents">
+                Manage Documents <ArrowRight className="ml-auto h-4 w-4" />
               </Link>
             </Button>
           </CardFooter>
@@ -286,9 +313,7 @@ export default function AdminDashboardPage() {
         {/* Approval Rate Card */}
         <Card className="flex flex-col">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">
-              Approval Rate
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Approval Rate</CardTitle>
             <BarChart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="flex-grow">
@@ -296,7 +321,8 @@ export default function AdminDashboardPage() {
               {dashboardData?.approvalRate || 0}%
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              {dashboardData?.documentStats.approved || 0} approved out of {dashboardData?.documentStats.total || 0} total documents
+              {dashboardData?.documentStats.approved || 0} approved out of{" "}
+              {dashboardData?.documentStats.total || 0} total documents
             </p>
           </CardContent>
           <CardFooter className="pt-0 mt-auto">
@@ -306,8 +332,9 @@ export default function AdminDashboardPage() {
               className="w-full justify-start"
               asChild
             >
-              <Link href="/admin/users">
-                Manage Users <ArrowRight className="ml-auto h-4 w-4" />
+              <Link href="/admin/documents?filter=approved">
+                View Approved Documents{" "}
+                <ArrowRight className="ml-auto h-4 w-4" />
               </Link>
             </Button>
           </CardFooter>
@@ -336,8 +363,9 @@ export default function AdminDashboardPage() {
               className="w-full justify-start"
               asChild
             >
-              <Link href="/admin/users">
-                Manage Users <ArrowRight className="ml-auto h-4 w-4" />
+              <Link href="/admin/documents?filter=pending">
+                Review Pending Documents{" "}
+                <ArrowRight className="ml-auto h-4 w-4" />
               </Link>
             </Button>
           </CardFooter>
@@ -355,10 +383,9 @@ export default function AdminDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {dashboardData?.recentDocumentActivity &&
-            dashboardData.recentDocumentActivity.length > 0 ? (
+            {processedActivity.length > 0 ? (
               <div className="space-y-4">
-                {dashboardData.recentDocumentActivity.map((activity) => (
+                {processedActivity.map((activity) => (
                   <div
                     key={activity.id}
                     className="flex items-start gap-4 pb-4 border-b last:border-0 last:pb-0"
@@ -368,13 +395,15 @@ export default function AdminDashboardPage() {
                     </div>
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center justify-between">
-                        <p className="font-medium">
-                          {documentTypeNames[activity.type]}
-                        </p>
+                        <p className="font-medium">{activity.formattedType}</p>
                         <StatusBadge status={activity.status} />
                       </div>
                       <p className="text-sm">
-                        By <Link href={`/admin/users/${activity.userId}`} className="font-medium hover:underline text-primary">
+                        By{" "}
+                        <Link
+                          href={`/admin/users/${activity.userId}`}
+                          className="font-medium hover:underline text-primary"
+                        >
                           {activity.user.name}
                         </Link>
                       </p>
@@ -382,15 +411,7 @@ export default function AdminDashboardPage() {
                         {activity.fileName}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {activity.reviewedAt
-                          ? `Reviewed ${formatDistanceToNow(
-                              new Date(activity.reviewedAt),
-                              { addSuffix: true }
-                            )} by ${activity.reviewer?.name || "Admin"}`
-                          : `Uploaded ${formatDistanceToNow(
-                              new Date(activity.uploadedAt),
-                              { addSuffix: true }
-                            )}`}
+                        {activity.formattedTime}
                       </p>
                     </div>
                   </div>
@@ -405,9 +426,7 @@ export default function AdminDashboardPage() {
           </CardContent>
           <CardFooter>
             <Button variant="outline" size="sm" className="w-full" asChild>
-              <Link href="/admin/users">
-                Manage Users & Documents
-              </Link>
+              <Link href="/admin/documents">View All Documents</Link>
             </Button>
           </CardFooter>
         </Card>
@@ -434,21 +453,35 @@ export default function AdminDashboardPage() {
                     </div>
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center justify-between">
-                        <Link href={`/admin/users/${user.id}`} className="font-medium hover:underline text-primary">
+                        <Link
+                          href={`/admin/users/${user.id}`}
+                          className="font-medium hover:underline text-primary"
+                        >
                           {user.name}
                         </Link>
                         <Badge
-                          variant={user.onboardingStatus === "COMPLETED" ? "default" : "outline"}
-                          className={user.onboardingStatus === "COMPLETED" ? "bg-green-500" : ""}
+                          variant={
+                            user.onboardingStatus === "COMPLETED"
+                              ? "default"
+                              : "outline"
+                          }
+                          className={
+                            user.onboardingStatus === "COMPLETED"
+                              ? "bg-green-500"
+                              : ""
+                          }
                         >
-                          {user.onboardingStatus === "COMPLETED" ? "Completed" : "In Progress"}
+                          {user.onboardingStatus === "COMPLETED"
+                            ? "Completed"
+                            : "In Progress"}
                         </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground">
                         {user.email}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Joined {formatDistanceToNow(new Date(user.createdAt), {
+                        Joined{" "}
+                        {formatDistanceToNow(new Date(user.createdAt), {
                           addSuffix: true,
                         })}
                       </p>
@@ -459,15 +492,15 @@ export default function AdminDashboardPage() {
             ) : (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <Users className="h-10 w-10 text-muted-foreground mb-2 opacity-50" />
-                <p className="text-muted-foreground">No recent user registrations</p>
+                <p className="text-muted-foreground">
+                  No recent user registrations
+                </p>
               </div>
             )}
           </CardContent>
           <CardFooter>
             <Button variant="outline" size="sm" className="w-full" asChild>
-              <Link href="/admin/users">
-                View All Users
-              </Link>
+              <Link href="/admin/users">View All Users</Link>
             </Button>
           </CardFooter>
         </Card>
@@ -477,19 +510,19 @@ export default function AdminDashboardPage() {
       <Card>
         <CardHeader>
           <CardTitle>Document Type Distribution</CardTitle>
-          <CardDescription>
-            Breakdown of documents by type
-          </CardDescription>
+          <CardDescription>Breakdown of documents by type</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {dashboardData?.documentsByType.map((item) => (
+            {formattedDocumentsByType.map((item) => (
               <div
                 key={item.type}
                 className="bg-muted/50 p-4 rounded-lg flex flex-col"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{documentTypeNames[item.type]}</span>
+                  <span className="text-sm font-medium">
+                    {item.formattedType}
+                  </span>
                   <FileText className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="text-2xl font-bold mt-2">{item.count}</div>

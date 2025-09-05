@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { Document, DocumentStatus, DocumentType } from "@/models/document";
@@ -54,34 +54,63 @@ export default function UserDocumentsPage() {
     }
   }, [searchParams]);
 
+  // Fetch all documents once
   const {
-    data: documents,
+    data: allDocuments,
     isLoading,
     refetch,
   } = useQuery({
     queryKey: ["userDocuments"],
     queryFn: getUserDocuments,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
-
-  // Get uploaded document types
-  const uploadedDocTypes = documents?.map((doc: Document) => doc.type) || [];
+  
+  // Derive all document-related data from allDocuments
+  const documents = useMemo(() => allDocuments || [], [allDocuments]);
+  
+  // Get uploaded document types - derived from documents
+  const uploadedDocTypes = useMemo(() => 
+    documents.map((doc: Document) => doc.type),
+    [documents]
+  );
 
   // Get missing document types
-  const missingDocTypes = requiredDocuments
-    .map((doc) => doc.type)
-    .filter((type) => !uploadedDocTypes.includes(type));
+  const missingDocTypes = useMemo(() => 
+    requiredDocuments
+      .map((doc) => doc.type)
+      .filter((type) => !uploadedDocTypes.includes(type)),
+    [uploadedDocTypes]
+  );
 
-  // Filter documents based on active tab
-  const filteredDocuments = documents?.filter((doc: Document) => {
-    if (activeTab === "all") return true;
-    if (activeTab === "pending_submission")
-      return !uploadedDocTypes.includes(doc.type);
-    if (activeTab === "pending_approval")
-      return doc.status === DocumentStatus.PENDING;
-    if (activeTab === "approved") return doc.status === DocumentStatus.APPROVED;
-    if (activeTab === "rejected") return doc.status === DocumentStatus.REJECTED;
-    return true;
-  });
+  // Filter documents based on active tab - this is now done client-side
+  const filteredDocuments = useMemo(() => {
+    return documents.filter((doc: Document) => {
+      if (activeTab === "all") return true;
+      if (activeTab === "pending_submission")
+        return !uploadedDocTypes.includes(doc.type);
+      if (activeTab === "pending_approval")
+        return doc.status === DocumentStatus.PENDING;
+      if (activeTab === "approved") return doc.status === DocumentStatus.APPROVED;
+      if (activeTab === "rejected") return doc.status === DocumentStatus.REJECTED;
+      return true;
+    });
+  }, [documents, activeTab, uploadedDocTypes]);
+  
+  // Group documents by type to show only the latest one for each type
+  const latestDocsByType = useMemo(() => {
+    const docMap = new Map<DocumentType, Document>();
+    
+    documents.forEach((doc: Document) => {
+      const existingDoc = docMap.get(doc.type);
+      if (!existingDoc || new Date(doc.uploadedAt) > new Date(existingDoc.uploadedAt)) {
+        docMap.set(doc.type, doc);
+      }
+    });
+    
+    return docMap;
+  }, [documents]);
 
   // Open upload drawer with pre-selected document type
   const openUploadDrawer = (docType: DocumentType) => {
@@ -108,14 +137,14 @@ export default function UserDocumentsPage() {
     try {
       setIsUploading(true);
 
-      // Step 1: Create document record and get upload URL
-      const { documentId, uploadUrl } = await initiateDocumentUpload(
+      // Step 1: Create document record in the database
+      const { documentId } = await initiateDocumentUpload(
         file,
         docType
       );
 
-      // Step 2: Upload file to S3 or local storage
-      await uploadFileToS3(file, uploadUrl);
+      // Step 2: Upload file to S3 through the backend
+      const downloadUrl = await uploadFileToS3(file, documentId);
 
       // Step 3: Refresh the documents list
       await refetch();
@@ -136,9 +165,9 @@ export default function UserDocumentsPage() {
     }
   };
 
-  // Find document by type
+  // Find document by type - now uses the latestDocsByType map for efficiency
   const findDocumentByType = (type: DocumentType) => {
-    return documents?.find((doc: Document) => doc.type === type);
+    return latestDocsByType.get(type);
   };
 
   if (isLoading) {
@@ -199,6 +228,7 @@ export default function UserDocumentsPage() {
         <TabsContent value="all" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {requiredDocuments.map((docType) => {
+              // Use the latestDocsByType map to efficiently find documents
               const uploadedDoc = findDocumentByType(docType.type);
 
               return (
@@ -242,32 +272,11 @@ export default function UserDocumentsPage() {
         <TabsContent value="pending_approval" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {(() => {
-              // Filter only documents with PENDING status
-              const pendingDocs =
-                documents?.filter(
-                  (doc: Document) => doc.status === DocumentStatus.PENDING
-                ) || [];
-
-              // Group by document type to show only the latest one
-              const latestPendingDocsByType = new Map<DocumentType, Document>();
-
-              pendingDocs.forEach((doc: Document) => {
-                const existingDoc = latestPendingDocsByType.get(doc.type);
-                if (
-                  !existingDoc ||
-                  new Date(doc.uploadedAt) > new Date(existingDoc.uploadedAt)
-                ) {
-                  latestPendingDocsByType.set(doc.type, doc);
-                }
-              });
-
-              // Convert map to array
-              const uniquePendingDocs = Array.from(
-                latestPendingDocsByType.values()
-              );
-
-              if (uniquePendingDocs.length > 0) {
-                return uniquePendingDocs.map((doc: Document) => (
+              // Filter only documents with PENDING status - using memoized filteredDocuments
+              const pendingDocs = filteredDocuments;
+              
+              if (pendingDocs.length > 0) {
+                return pendingDocs.map((doc: Document) => (
                   <DocumentCard
                     key={doc.id}
                     docType={doc.type}
@@ -294,7 +303,7 @@ export default function UserDocumentsPage() {
         </TabsContent>
 
         <TabsContent value="approved" className="mt-6">
-          {filteredDocuments && filteredDocuments.length > 0 ? (
+          {filteredDocuments.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredDocuments.map((doc: Document) => (
                 <DocumentCard
@@ -317,7 +326,7 @@ export default function UserDocumentsPage() {
         </TabsContent>
 
         <TabsContent value="rejected" className="mt-6">
-          {filteredDocuments && filteredDocuments.length > 0 ? (
+          {filteredDocuments.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredDocuments.map((doc: Document) => (
                 <DocumentCard

@@ -79,8 +79,8 @@ export default function MobileNav({ isAdmin, onItemClick }: MobileNavProps) {
       icon: User,
     },
     {
-      label: "Office Entry",
-      href: "/user/office-entry",
+      label: "General Guidelines",
+      href: "/user/general-guidelines",
       icon: FileText,
     },
     {
