@@ -404,24 +404,27 @@ export function DocumentCard({
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden">
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden w-[95vw] max-w-full">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-between pr-8">
-              <span className="truncate mr-4">{documentName}</span>
-              {documentUrl && (
-                <a
-                  href={documentUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 whitespace-nowrap"
-                >
-                  <Download className="h-4 w-4 mr-1" />
-                  Download {isPdf ? "PDF" : "Image"}
-                </a>
-              )}
+            <DialogTitle className="pr-8">
+              <span className="truncate">{documentName}</span>
+              {/* 'Open in new tab' button moved to DialogFooter for mobile */}
+              <div className="hidden sm:block mt-2 sm:mt-0">
+                {documentUrl && (
+                  <a
+                    href={documentUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 whitespace-nowrap"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-1" />
+                    Open in new tab
+                  </a>
+                )}
+              </div>
             </DialogTitle>
           </DialogHeader>
-          <div className="relative w-full h-[70vh] mt-2">
+          <div className="relative w-full h-[60vh] md:h-[70vh] mt-2">
             {isLoading && (
               <div className="absolute inset-0 flex justify-center items-center bg-slate-50">
                 <Loading size="lg" variant="primary" />
@@ -441,8 +444,8 @@ export function DocumentCard({
                       rel="noreferrer"
                       className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                     >
-                      <Download className="h-4 w-4" />
-                      Download PDF
+                      <ExternalLink className="h-4 w-4" />
+                      Open in new tab
                     </a>
                   )}
                 </div>
@@ -452,18 +455,40 @@ export function DocumentCard({
                   className="w-full h-full border-0"
                   onLoad={handleLoad}
                   onError={handleError}
+                  title="PDF Document"
                 />
               )
             ) : (
-              <img
-                src={documentUrl || undefined}
-                alt={documentName}
-                className="w-full h-full object-contain"
-                onLoad={handleLoad}
-                onError={handleError}
-              />
+              <div className="w-full h-full flex items-center justify-center bg-gray-100 overflow-hidden">
+                <div className="flex items-center justify-center w-full h-full">
+                  <img
+                    src={documentUrl || undefined}
+                    alt={documentName}
+                    className="max-w-full max-h-full object-contain"
+                    onLoad={handleLoad}
+                    onError={handleError}
+                    style={{ margin: '0 auto' }}
+                  />
+                </div>
+              </div>
             )}
           </div>
+          {/* Add DialogFooter with 'Open in new tab' button for mobile */}
+          <DialogFooter className="sm:hidden mt-4">
+            {documentUrl && (
+              <Button asChild variant="outline" className="w-full">
+                <a
+                  href={documentUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Open in new tab
+                </a>
+              </Button>
+            )}
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
