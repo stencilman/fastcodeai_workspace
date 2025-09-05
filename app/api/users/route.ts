@@ -4,14 +4,9 @@ import { UserRole, CreateUserInput } from "@/models/user";
 
 export async function GET(_request: NextRequest) {
     try {
-        // Get all non-admin users (employees/candidates)
-        const users = await getAllUsers();
-
-        // // Filter out admin users
-        // const nonAdminUsers = users.filter(user =>
-        //     user.role === UserRole.USER
-        // );
-
+        // Get only non-admin users (employees/candidates)
+        const users = await getUsersByRole(UserRole.USER);
+        
         return NextResponse.json(users);
     } catch (error) {
         console.error("Error fetching users:", error);

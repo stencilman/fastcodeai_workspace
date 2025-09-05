@@ -83,6 +83,11 @@ export default function SideNav({
       href: "/admin/users",
       icon: Users,
     },
+    {
+      label: "Documents",
+      href: "/admin/documents",
+      icon: FileText,
+    },
   ];
 
   const candidateRoutes: Route[] = [
