@@ -4,7 +4,6 @@ import { db } from '@/lib/db';
 import { getUserById } from '@/data/user';
 import { DocumentStatus, DocumentType } from '@/models/document';
 import { OnboardingStatus } from '@/models/user';
-import { cache } from '@/lib/cache';
 
 // Calculate profile completion percentage based on filled fields
 function calculateProfileCompletion(user: any): number {
@@ -48,16 +47,7 @@ export async function GET(req: NextRequest) {
         if (!user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
-        
-        // Check if we have a cached response (30 second TTL)
-        const cacheKey = `user-dashboard-${user.id}`;
-        const cachedData = cache.get(cacheKey);
-        
-        if (cachedData) {
-            console.log(`User dashboard data served from cache in ${Date.now() - startTime}ms`);
-            return NextResponse.json(cachedData);
-        }
-        
+
         // Run all queries in parallel using Promise.all
         const [
             // Get all user documents in a single query
@@ -69,7 +59,7 @@ export async function GET(req: NextRequest) {
                 where: { userId: user.id },
                 orderBy: { uploadedAt: 'desc' },
             }),
-            
+
             db.document.findMany({
                 where: { userId: user.id },
                 orderBy: { uploadedAt: 'desc' },
@@ -105,12 +95,12 @@ export async function GET(req: NextRequest) {
 
         // Calculate onboarding status
         const documentsCompletion = Math.round((uploadedDocumentTypes.length / requiredDocumentTypes.length) * 100);
-        
+
         // Handle onboardingStatus with type safety
         const userOnboardingStatus = (user as any).onboardingStatus || OnboardingStatus.IN_PROGRESS;
-        
+
         const onboardingStatus = {
-            status: userOnboardingStatus === OnboardingStatus.COMPLETED 
+            status: userOnboardingStatus === OnboardingStatus.COMPLETED
                 ? 'Completed'
                 : 'In Progress',
             startDate: user.createdAt,
@@ -132,13 +122,10 @@ export async function GET(req: NextRequest) {
             recentActivity,
             onboardingStatus
         };
-        
-        // Cache the response for 30 seconds
-        cache.set(cacheKey, responseData, 30);
-        
+
         // Log the response time
         console.log(`User dashboard data generated in ${Date.now() - startTime}ms`);
-        
+
         return NextResponse.json(responseData);
     } catch (error) {
         console.error('Error fetching dashboard data:', error);

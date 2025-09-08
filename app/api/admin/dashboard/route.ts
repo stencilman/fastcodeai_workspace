@@ -3,13 +3,12 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { DocumentStatus, DocumentType } from '@/models/document';
 import { UserRole } from '@/models/user';
-import { cache } from '@/lib/cache';
 
 // Get dashboard data for admin
 export async function GET(req: NextRequest) {
     const startTime = Date.now();
     const session = await auth();
-    
+
     // Check if user is authenticated and is an admin
     if (!session?.user?.email) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -25,18 +24,9 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
         }
 
-        // Check if we have a cached response (30 second TTL)
-        const cacheKey = `admin-dashboard-${currentUser.id}`;
-        const cachedData = cache.get(cacheKey);
-        
-        if (cachedData) {
-            console.log(`Dashboard data served from cache in ${Date.now() - startTime}ms`);
-            return NextResponse.json(cachedData);
-        }
-
         // Run all major queries in parallel using Promise.all
         const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        
+
         // Define all the queries we'll run in parallel
         const [
             // User statistics
@@ -56,7 +46,7 @@ export async function GET(req: NextRequest) {
                 db.user.count({ where: { role: 'USER', createdAt: { gte: oneWeekAgo } } }),
                 db.user.count({ where: { role: 'USER', onboardingStatus: { not: 'COMPLETED' } } })
             ]),
-            
+
             // 2. Document statistics
             db.$transaction([
                 db.document.count(),
@@ -64,7 +54,7 @@ export async function GET(req: NextRequest) {
                 db.document.count({ where: { status: DocumentStatus.APPROVED } }),
                 db.document.count({ where: { status: DocumentStatus.REJECTED } })
             ]),
-            
+
             // 3. Recent document activity
             db.document.findMany({
                 orderBy: { uploadedAt: 'desc' },
@@ -78,7 +68,7 @@ export async function GET(req: NextRequest) {
                     }
                 }
             }),
-            
+
             // 4. Document type distribution
             db.document.groupBy({
                 by: ['type'],
@@ -86,7 +76,7 @@ export async function GET(req: NextRequest) {
                     _all: true
                 }
             }),
-            
+
             // 5. Recent users
             db.user.findMany({
                 where: { role: 'USER' },
@@ -101,31 +91,31 @@ export async function GET(req: NextRequest) {
                 }
             })
         ]);
-        
+
         // Process user statistics
         const [userCount, newUsersThisWeek, usersWithIncompleteOnboarding] = userStats;
-        
+
         // Process document statistics
         const [totalDocuments, pendingCount, approvedCount, rejectedCount] = documentStats;
-        
+
         const documentStatsObj = {
             total: totalDocuments,
             pending: pendingCount,
             approved: approvedCount,
             rejected: rejectedCount
         };
-        
+
         // Calculate approval rate
-        const approvalRate = totalDocuments > 0 
-            ? Math.round((documentStatsObj.approved / totalDocuments) * 100) 
+        const approvalRate = totalDocuments > 0
+            ? Math.round((documentStatsObj.approved / totalDocuments) * 100)
             : 0;
-        
+
         // Process document activity with reviewer information
         // Get all unique reviewer IDs from the documents
         const reviewerIds = recentDocumentActivity
             .filter(doc => doc.reviewedBy)
             .map(doc => doc.reviewedBy as string);
-        
+
         // If we have reviewers, fetch them all at once
         let reviewerMap = new Map();
         if (reviewerIds.length > 0) {
@@ -135,7 +125,7 @@ export async function GET(req: NextRequest) {
             });
             reviewerMap = new Map(reviewers.map(r => [r.id, r.name]));
         }
-        
+
         // Process the document activity with the reviewer map
         const processedActivity = recentDocumentActivity.map(doc => {
             const reviewerName = doc.reviewedBy ? reviewerMap.get(doc.reviewedBy) : null;
@@ -145,7 +135,7 @@ export async function GET(req: NextRequest) {
                 reviewer: reviewerName ? { name: reviewerName } : null
             };
         });
-        
+
         // Format document type distribution
         const documentsByType = Object.values(DocumentType).map(type => {
             const found = documentTypeGroups.find(group => group.type === type);
@@ -154,7 +144,7 @@ export async function GET(req: NextRequest) {
                 count: found ? found._count._all : 0
             };
         });
-        
+
         // Prepare the response data
         const responseData = {
             userStats: {
@@ -169,13 +159,10 @@ export async function GET(req: NextRequest) {
             documentsByType,
             recentUsers
         };
-        
-        // Cache the response for 30 seconds
-        cache.set(cacheKey, responseData, 30);
-        
+
         // Log the response time
         console.log(`Dashboard data generated in ${Date.now() - startTime}ms`);
-        
+
         return NextResponse.json(responseData);
     } catch (error) {
         console.error('Error fetching admin dashboard data:', error);
