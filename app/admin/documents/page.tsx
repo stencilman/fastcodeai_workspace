@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
 import { Document as BaseDocument, DocumentStatus, DocumentType } from "@/models/document";
 import { toast } from "sonner";
 
@@ -89,9 +90,20 @@ const reviewDocument = async (documentId: string, status: 'APPROVED' | 'REJECTED
 };
 
 export default function AdminDocumentsPage() {
-  const [activeTab, setActiveTab] = useState<string>("all");
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<string>(tabParam || "all");
   const [processingDocumentId, setProcessingDocumentId] = useState<string | null>(null);
   const [processingAction, setProcessingAction] = useState<"approve" | "reject" | null>(null);
+  
+  // Update active tab when URL parameter changes
+  useEffect(() => {
+    if (tabParam && ["all", "pending", "approved", "rejected"].includes(tabParam)) {
+      setActiveTab(tabParam);
+    } else {
+      setActiveTab("all");
+    }
+  }, [tabParam]);
 
   // Map tab values to document status for client-side filtering
   const tabToStatus: Record<string, string | undefined> = {

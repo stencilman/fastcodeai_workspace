@@ -332,7 +332,7 @@ export default function AdminDashboardPage() {
               className="w-full justify-start"
               asChild
             >
-              <Link href="/admin/documents?filter=approved">
+              <Link href="/admin/documents?tab=approved">
                 View Approved Documents{" "}
                 <ArrowRight className="ml-auto h-4 w-4" />
               </Link>
@@ -363,7 +363,7 @@ export default function AdminDashboardPage() {
               className="w-full justify-start"
               asChild
             >
-              <Link href="/admin/documents?filter=pending">
+              <Link href="/admin/documents?tab=pending">
                 Review Pending Documents{" "}
                 <ArrowRight className="ml-auto h-4 w-4" />
               </Link>
