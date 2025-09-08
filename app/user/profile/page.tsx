@@ -71,12 +71,14 @@ export default function ProfilePage() {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-medium">
-            {userData.name}
-            <span className="text-sm font-normal text-muted-foreground ml-2">
-              ({userData.email})
-            </span>
-          </CardTitle>
+          <div className="space-y-1">
+            <CardTitle className="text-lg font-medium">
+              {userData.name}
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              {userData.email}
+            </p>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

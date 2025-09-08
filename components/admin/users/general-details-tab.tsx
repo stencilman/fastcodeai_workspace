@@ -113,12 +113,14 @@ export function GeneralDetailsTab() {
     <TabsContent value="general">
       <Card>
         <CardHeader className="pb-3 flex flex-row justify-between items-center">
-          <CardTitle className="text-lg font-medium">
-            {user?.name}
-            <span className="text-sm font-normal text-muted-foreground ml-2">
-              ({user?.email})
-            </span>
-          </CardTitle>
+          <div className="space-y-1">
+            <CardTitle className="text-lg font-medium">
+              {user?.name}
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              {user?.email}
+            </p>
+          </div>
           <Button
             variant="outline"
             size="sm"
