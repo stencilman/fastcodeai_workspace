@@ -1,5 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { Document, DocumentStatus, DocumentType } from "@/models/document";
+import { DocumentStatus, DocumentType } from "@/models/document";
+import Link from "next/link";
+
+// Extended Document interface with user information
+interface Document {
+  id: string;
+  userId: string;
+  type: DocumentType;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  s3Key: string;
+  status: DocumentStatus;
+  uploadedAt: Date;
+  reviewedBy?: string;
+  reviewedAt?: Date;
+  notes?: string;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +61,7 @@ interface DocumentCardProps {
   onReject: (documentId: string, reason?: string) => Promise<void>;
   isProcessing?: boolean;
   processingAction?: "approve" | "reject" | null;
+  showSubmitter?: boolean;
 }
 
 export function DocumentCard({
@@ -47,6 +70,7 @@ export function DocumentCard({
   onReject,
   isProcessing = false,
   processingAction = null,
+  showSubmitter = false,
 }: DocumentCardProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -305,6 +329,16 @@ export function DocumentCard({
             <span>Uploaded: {formatDate(document.uploadedAt)}</span>
             {document.reviewedAt && (
               <span>Reviewed: {formatDate(document.reviewedAt)}</span>
+            )}
+            {showSubmitter && document.user && (
+              <span className="flex items-center gap-1">
+                Submitted by: <Link 
+                  href={`/admin/users/${document.user.id}`} 
+                  className="text-primary font-medium hover:underline"
+                >
+                  {document.user.name}
+                </Link>
+              </span>
             )}
           </div>
           {document.notes && (

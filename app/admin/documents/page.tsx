@@ -286,6 +286,7 @@ export default function AdminDocumentsPage() {
                   onReject={handleReject}
                   isProcessing={processingDocumentId === doc.id}
                   processingAction={processingDocumentId === doc.id ? processingAction : null}
+                  showSubmitter={true}
                 />
               ))}
             </div>
