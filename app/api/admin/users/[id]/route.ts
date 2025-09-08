@@ -6,7 +6,7 @@ import { auth } from "@/auth";
 // GET endpoint to fetch user details (admin only)
 export async function GET(
     _request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: { id: string } }
 ) {
     try {
         // Check if the current user is an admin
@@ -18,7 +18,9 @@ export async function GET(
             );
         }
 
-        const { id } = params;
+        // Properly await and extract the id parameter
+        const params = await context.params;
+        const id = params.id;
         const user = await getUserById(id);
 
         if (!user) {
@@ -41,7 +43,7 @@ export async function GET(
 // PATCH endpoint to update user details (admin only)
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: { id: string } }
 ) {
     try {
         // Check if the current user is an admin
@@ -53,7 +55,9 @@ export async function PATCH(
             );
         }
 
-        const { id } = params;
+        // Properly await and extract the id parameter
+        const params = await context.params;
+        const id = params.id;
         const body = await request.json();
 
         // Check if user exists
