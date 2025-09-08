@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { TabsContent } from "@/components/ui/tabs";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, ExternalLink, Pencil, Check, X } from "lucide-react";
 import { FaLinkedin, FaSlack } from "react-icons/fa6";
@@ -18,31 +18,35 @@ import { Badge } from "@/components/ui/badge";
 
 export function GeneralDetailsTab() {
   const params = useParams();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const editParam = searchParams.get("edit");
   const [isEditing, setIsEditing] = useState(false);
   const queryClient = useQueryClient();
-  
+
   // Mutation for updating onboarding status
   const updateOnboardingStatusMutation = useMutation({
     mutationFn: async (status: OnboardingStatus) => {
-      const response = await fetch(`/api/admin/users/${params.id}/onboarding-status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ onboardingStatus: status }),
-      });
-      
+      const response = await fetch(
+        `/api/admin/users/${params.id}/onboarding-status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ onboardingStatus: status }),
+        }
+      );
+
       if (!response.ok) {
-        throw new Error('Failed to update onboarding status');
+        throw new Error("Failed to update onboarding status");
       }
-      
+
       return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user', params.id] });
-      toast.success('Onboarding status updated successfully');
+      queryClient.invalidateQueries({ queryKey: ["user", params.id] });
+      toast.success("Onboarding status updated successfully");
     },
     onError: (error) => {
       toast.error(`Error updating onboarding status: ${error.message}`);
@@ -61,6 +65,12 @@ export function GeneralDetailsTab() {
     queryFn: async () => {
       const response = await fetch(`/api/admin/users/${params.id}`);
       if (!response.ok) {
+        if (response.status === 404) {
+          toast.error("User not found", {
+            description: "The requested user does not exist or has been deleted."
+          });
+          router.push("/admin/users");
+        }
         throw new Error("Failed to fetch user");
       }
       const data = await response.json();
@@ -71,7 +81,7 @@ export function GeneralDetailsTab() {
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
+    return date.toLocaleDateString("en-GB"); // DD/MM/YYYY format
   };
 
   const extractLinkedInUsername = (url: string): string => {
@@ -114,12 +124,8 @@ export function GeneralDetailsTab() {
       <Card>
         <CardHeader className="pb-3 flex flex-row justify-between items-center">
           <div className="space-y-1">
-            <CardTitle className="text-lg font-medium">
-              {user?.name}
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {user?.email}
-            </p>
+            <CardTitle className="text-lg font-medium">{user?.name}</CardTitle>
+            <p className="text-sm text-muted-foreground">{user?.email}</p>
           </div>
           <Button
             variant="outline"
@@ -149,29 +155,45 @@ export function GeneralDetailsTab() {
             ) : (
               <>
                 <div className="mb-6 p-4 border rounded-lg bg-muted/20">
-                  <h3 className="text-md font-medium mb-3">Onboarding Status</h3>
+                  <h3 className="text-md font-medium mb-3">
+                    Onboarding Status
+                  </h3>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Badge
-                        variant={user?.onboardingStatus === OnboardingStatus.COMPLETED ? "default" : "secondary"}
+                        variant={
+                          user?.onboardingStatus === OnboardingStatus.COMPLETED
+                            ? "default"
+                            : "secondary"
+                        }
                         className="capitalize"
                       >
-                        {user?.onboardingStatus?.toLowerCase().replace("_", " ") || "in progress"}
+                        {user?.onboardingStatus
+                          ?.toLowerCase()
+                          .replace("_", " ") || "in progress"}
                       </Badge>
-                      {user?.onboardingStatus === OnboardingStatus.COMPLETED && (
+                      {user?.onboardingStatus ===
+                        OnboardingStatus.COMPLETED && (
                         <Check className="h-4 w-4 text-green-500" />
                       )}
                     </div>
                     <div className="flex items-center gap-3">
-                      <Label htmlFor="onboarding-completed" className="cursor-pointer text-sm font-medium">
+                      <Label
+                        htmlFor="onboarding-completed"
+                        className="cursor-pointer text-sm font-medium"
+                      >
                         Mark as Completed
                       </Label>
                       <Switch
                         id="onboarding-completed"
-                        checked={user?.onboardingStatus === OnboardingStatus.COMPLETED}
+                        checked={
+                          user?.onboardingStatus === OnboardingStatus.COMPLETED
+                        }
                         onCheckedChange={(checked: boolean) => {
                           updateOnboardingStatusMutation.mutate(
-                            checked ? OnboardingStatus.COMPLETED : OnboardingStatus.IN_PROGRESS
+                            checked
+                              ? OnboardingStatus.COMPLETED
+                              : OnboardingStatus.IN_PROGRESS
                           );
                         }}
                         disabled={updateOnboardingStatusMutation.isPending}
@@ -180,7 +202,7 @@ export function GeneralDetailsTab() {
                     </div>
                   </div>
                 </div>
-                
+
                 <h3 className="text-lg font-medium">User Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>

@@ -4,11 +4,13 @@ import { TabsContent } from "@/components/ui/tabs";
 import { DocumentCard } from "@/components/admin/users/document-card";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Loading } from "@/components/ui/loading";
 
 export function DocumentsTab() {
   const params = useParams();
+  const router = useRouter();
   const userId = params.id as string;
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
@@ -25,6 +27,12 @@ export function DocumentsTab() {
     queryFn: async () => {
       const response = await fetch(`/api/documents?userId=${userId}`);
       if (!response.ok) {
+        if (response.status === 404) {
+          toast.error("User not found", {
+            description: "The requested user does not exist or has been deleted."
+          });
+          router.push("/admin/users");
+        }
         throw new Error("Failed to fetch documents");
       }
       return response.json();
