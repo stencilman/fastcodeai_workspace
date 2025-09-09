@@ -407,16 +407,16 @@ export default function UserDashboardPage() {
                         <FileText className="h-4 w-4 text-primary" />
                       </div>
                       <div className="flex-1 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <p className="font-medium break-words">
                             {documentTypeNames[activity.type]}
                           </p>
                           <StatusBadge status={activity.status} />
                         </div>
-                        <p className="text-sm text-muted-foreground truncate max-w-[250px]">
+                        <p className="text-sm text-muted-foreground break-words">
                           {activity.fileName}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground break-words">
                           {activity.reviewedAt
                             ? `Reviewed ${formatDistanceToNow(
                                 new Date(activity.reviewedAt),

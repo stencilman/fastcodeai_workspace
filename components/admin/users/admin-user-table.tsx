@@ -184,13 +184,15 @@ export function AdminUserTable({ users, pageSize = 10 }: AdminUserTableProps) {
           <div className="hidden sm:flex items-center gap-1">
             <span className="text-sm font-medium">Page</span>
             <span className="text-sm font-medium">
-              {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+              {table.getState().pagination.pageIndex + 1} of{" "}
+              {table.getPageCount()}
             </span>
           </div>
           <div className="sm:hidden flex flex-col items-center justify-center min-w-[80px]">
             <span className="text-sm font-medium">Page</span>
             <span className="text-sm font-medium">
-              {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+              {table.getState().pagination.pageIndex + 1} of{" "}
+              {table.getPageCount()}
             </span>
           </div>
           <Button
