@@ -93,8 +93,11 @@ export default function Navbar() {
           </SheetContent>
         </Sheet>
 
-        <Link href="/" className="text-lg font-semibold">
-          Fastcode Onboard
+        <Link href="/" className="flex items-center gap-2">
+          <div className="relative w-6 h-6">
+            <Image src="/brain.svg" alt="FastCode Logo" width={24} height={24} />
+          </div>
+          <span className="text-lg font-semibold">FastCode Workspace</span>
         </Link>
       </div>
 
