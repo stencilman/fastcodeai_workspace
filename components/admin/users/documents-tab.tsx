@@ -62,7 +62,7 @@ export function DocumentsTab() {
 
       return response.json();
     },
-    onSuccess: (_, documentId) => {
+    onSuccess: (data, documentId) => {
       // Optimistically update the cache
       queryClient.setQueryData(
         ["documents", userId],
@@ -75,7 +75,8 @@ export function DocumentsTab() {
                     ...doc,
                     status: DocumentStatus.APPROVED,
                     reviewedAt: new Date(),
-                    reviewedBy: "3", // Admin user ID
+                    reviewedBy: "3", // Admin user ID,
+                    notes: undefined, // Explicitly clear notes when approving
                   }
                 : doc
             ),

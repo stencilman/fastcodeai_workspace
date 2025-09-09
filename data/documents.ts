@@ -60,14 +60,29 @@ export async function updateDocumentStatus(
     notes?: string
 ) {
     try {
+        // When approving a document, explicitly set notes to null
+        const updateData: {
+            status: DocumentStatus;
+            reviewedBy: string;
+            reviewedAt: Date;
+            notes?: string | null;
+        } = {
+            status,
+            reviewedBy: reviewerId,
+            reviewedAt: new Date(),
+        };
+        
+        // If status is APPROVED, explicitly set notes to null
+        if (status === DocumentStatus.APPROVED) {
+            updateData.notes = null;
+        } else if (notes !== undefined) {
+            // For other statuses, only set notes if provided
+            updateData.notes = notes;
+        }
+        
         const document = await db.document.update({
             where: { id },
-            data: {
-                status,
-                reviewedBy: reviewerId,
-                reviewedAt: new Date(),
-                notes,
-            },
+            data: updateData,
         });
         return document;
     } catch (error) {

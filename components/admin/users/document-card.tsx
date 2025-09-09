@@ -51,7 +51,14 @@ import {
   ExternalLink,
   Download,
   Eye,
+  MoreVertical,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { getDocumentUrl } from "@/lib/document-upload-service";
 
@@ -270,6 +277,12 @@ export function DocumentCard({
       await onApprove(document.id);
       // Update local status after successful API call
       setLocalDocumentStatus(DocumentStatus.APPROVED);
+      
+      // Clear notes when transitioning from rejected to approved
+      if (document.status === DocumentStatus.REJECTED) {
+        // Update the document object to remove notes
+        document.notes = undefined;
+      }
     } catch (error) {
       console.error("Error approving document:", error);
       // Status remains unchanged since we only update after success
@@ -341,14 +354,94 @@ export function DocumentCard({
               </span>
             )}
           </div>
-          {document.notes && (
+          {document.notes && localDocumentStatus === DocumentStatus.REJECTED && (
             <div className="text-xs mt-1 italic truncate text-red-600">
-              {document.notes}
+              Reason: {document.notes}
             </div>
           )}
         </div>
-        {isPending && (
-          <div className="hidden md:flex gap-2 ml-auto">
+        <div className="hidden md:flex gap-2 ml-auto">
+          {isPending ? (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                onClick={handleReject}
+                disabled={isProcessing}
+              >
+                {isRejecting ? (
+                  <Loading
+                    size="sm"
+                    variant="danger"
+                    text="Rejecting..."
+                    textClassName="text-red-600"
+                  />
+                ) : (
+                  <>
+                    <X className="h-4 w-4 mr-1" /> Reject
+                  </>
+                )}
+              </Button>
+              <Button
+                size="sm"
+                className="bg-green-600 hover:bg-green-700 text-white"
+                onClick={handleApprove}
+                disabled={isProcessing}
+              >
+                {isApproving ? (
+                  <Loading
+                    size="sm"
+                    variant="white"
+                    text="Approving..."
+                    textClassName="text-white"
+                  />
+                ) : (
+                  <>
+                    <Check className="h-4 w-4 mr-1" /> Approve
+                  </>
+                )}
+              </Button>
+            </>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" disabled={isProcessing}>
+                  {isProcessing ? (
+                    <Loading size="sm" variant="primary" />
+                  ) : (
+                    <MoreVertical className="h-4 w-4" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {localDocumentStatus !== DocumentStatus.APPROVED && (
+                  <DropdownMenuItem 
+                    onClick={handleApprove}
+                    disabled={isProcessing}
+                    className="text-green-600 focus:text-green-700 focus:bg-green-50"
+                  >
+                    <Check className="h-4 w-4 mr-2" /> Approve Document
+                  </DropdownMenuItem>
+                )}
+                {localDocumentStatus !== DocumentStatus.REJECTED && (
+                  <DropdownMenuItem 
+                    onClick={handleReject}
+                    disabled={isProcessing}
+                    className="text-red-600 focus:text-red-700 focus:bg-red-50"
+                  >
+                    <X className="h-4 w-4 mr-2" /> Reject Document
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+      </div>
+
+      <div className="md:hidden px-4 pb-4 pt-0">
+        {isPending ? (
+          <div className="grid grid-cols-2 gap-2">
             <Button
               size="sm"
               variant="outline"
@@ -378,9 +471,10 @@ export function DocumentCard({
               {isApproving ? (
                 <Loading
                   size="sm"
-                  variant="white"
+                  variant="default"
                   text="Approving..."
                   textClassName="text-white"
+                  className="text-white"
                 />
               ) : (
                 <>
@@ -389,53 +483,44 @@ export function DocumentCard({
               )}
             </Button>
           </div>
+        ) : (
+          <div className="flex justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" disabled={isProcessing}>
+                  {isProcessing ? (
+                    <Loading size="sm" variant="primary" text="Processing..." />
+                  ) : (
+                    <>
+                      <MoreVertical className="h-4 w-4 mr-1" /> Actions
+                    </>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {localDocumentStatus !== DocumentStatus.APPROVED && (
+                  <DropdownMenuItem 
+                    onClick={handleApprove}
+                    disabled={isProcessing}
+                    className="text-green-600 focus:text-green-700 focus:bg-green-50"
+                  >
+                    <Check className="h-4 w-4 mr-2" /> Approve Document
+                  </DropdownMenuItem>
+                )}
+                {localDocumentStatus !== DocumentStatus.REJECTED && (
+                  <DropdownMenuItem 
+                    onClick={handleReject}
+                    disabled={isProcessing}
+                    className="text-red-600 focus:text-red-700 focus:bg-red-50"
+                  >
+                    <X className="h-4 w-4 mr-2" /> Reject Document
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         )}
       </div>
-
-      {isPending && (
-        <div className="md:hidden px-4 pb-4 pt-0 grid grid-cols-2 gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-            onClick={handleReject}
-            disabled={isProcessing}
-          >
-            {isRejecting ? (
-              <Loading
-                size="sm"
-                variant="danger"
-                text="Rejecting..."
-                textClassName="text-red-600"
-              />
-            ) : (
-              <>
-                <X className="h-4 w-4 mr-1" /> Reject
-              </>
-            )}
-          </Button>
-          <Button
-            size="sm"
-            className="bg-green-600 hover:bg-green-700 text-white"
-            onClick={handleApprove}
-            disabled={isProcessing}
-          >
-            {isApproving ? (
-              <Loading
-                size="sm"
-                variant="default"
-                text="Approving..."
-                textClassName="text-white"
-                className="text-white"
-              />
-            ) : (
-              <>
-                <Check className="h-4 w-4 mr-1" /> Approve
-              </>
-            )}
-          </Button>
-        </div>
-      )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden w-[95vw] max-w-full">

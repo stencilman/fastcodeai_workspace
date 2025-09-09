@@ -19,10 +19,11 @@ export async function POST(
             });
         }
 
-        const updatedDocument = updateDocumentStatus(
+        const updatedDocument = await updateDocumentStatus(
             id,
             DocumentStatus.APPROVED,
-            reviewerId
+            reviewerId,
+            undefined // Explicitly clear notes when approving
         );
 
         if (!updatedDocument) {

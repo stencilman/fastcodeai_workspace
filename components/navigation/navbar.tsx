@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useId } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -28,6 +28,10 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
+  
+  // Generate stable IDs for components
+  const mobileMenuId = useId();
+  const profileMenuId = useId();
 
   // Determine if current path is in admin section
   const isAdmin = pathname.startsWith("/admin");
@@ -69,6 +73,8 @@ export default function Navbar() {
               className="md:hidden rounded-md p-2 text-gray-500 hover:bg-gray-100"
               aria-label="Open navigation menu"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              id={`mobile-menu-${mobileMenuId}`}
+              suppressHydrationWarning
             >
               {mobileMenuOpen ? (
                 <X className="h-5 w-5" />
@@ -96,6 +102,8 @@ export default function Navbar() {
           <button
             className="rounded-full border bg-muted/40 hover:bg-muted p-2 outline-none focus-visible:ring"
             aria-label="Open profile menu"
+            id={`profile-menu-${profileMenuId}`}
+            suppressHydrationWarning
           >
             <User className="h-5 w-5" />
           </button>
