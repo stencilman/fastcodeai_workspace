@@ -2,6 +2,7 @@
 
 import { useState, useId } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   DropdownMenu,
@@ -100,12 +101,25 @@ export default function Navbar() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            className="rounded-full border bg-muted/40 hover:bg-muted p-2 outline-none focus-visible:ring"
+            className="rounded-full border bg-muted/40 hover:bg-muted outline-none focus-visible:ring overflow-hidden"
             aria-label="Open profile menu"
             id={`profile-menu-${profileMenuId}`}
             suppressHydrationWarning
           >
-            <User className="h-5 w-5" />
+            {session?.user?.image ? (
+              <div className="h-9 w-9 relative">
+                <Image 
+                  src={session.user.image} 
+                  alt="Profile" 
+                  fill 
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className="p-2">
+                <User className="h-5 w-5" />
+              </div>
+            )}
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
