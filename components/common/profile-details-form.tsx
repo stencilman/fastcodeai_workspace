@@ -37,6 +37,9 @@ import { BloodGroup, User } from "@/models/user";
 
 // Form schema with validation
 const formSchema = z.object({
+  name: z.string().min(2, {
+    message: "Name must be at least 2 characters.",
+  }),
   phone: z.string().min(10, {
     message: "Phone number must be at least 10 characters.",
   }),
@@ -195,6 +198,7 @@ export function ProfileDetailsForm({
 
   // Initialize form with user data
   const defaultValues = {
+    name: userData.name || "",
     phone: userData.phone || "",
     address: userData.address || "",
     linkedinProfile: userData.linkedinProfile || "",
@@ -245,6 +249,7 @@ export function ProfileDetailsForm({
     const subscription = form.watch((value) => {
       // Check if any field has changed from its default value
       const hasChanged =
+        value.name !== defaultValues.name ||
         value.phone !== defaultValues.phone ||
         value.address !== defaultValues.address ||
         value.linkedinProfile !== defaultValues.linkedinProfile ||
@@ -270,7 +275,20 @@ export function ProfileDetailsForm({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setIsEditing(!isEditing)}
+            onClick={() => {
+              if (!isEditing) {
+                // Reset form with user data when entering edit mode
+                form.reset({
+                  name: userData.name || "",
+                  phone: userData.phone || "",
+                  address: userData.address || "",
+                  linkedinProfile: userData.linkedinProfile || "",
+                  bloodGroup: getDisplayBloodGroup(userData.bloodGroup),
+                  slackUserId: userData.slackUserId || "",
+                });
+              }
+              setIsEditing(!isEditing);
+            }}
           >
             {isEditing ? (
               "Cancel"
@@ -287,6 +305,21 @@ export function ProfileDetailsForm({
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Name */}
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
                 {/* Phone Number */}
                 <FormField
                   control={form.control}
@@ -405,6 +438,13 @@ export function ProfileDetailsForm({
         ) : (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <h4 className="text-sm font-medium text-muted-foreground">
+                  Name
+                </h4>
+                <p>{userData.name || "Not provided"}</p>
+              </div>
+              
               <div className="space-y-1">
                 <h4 className="text-sm font-medium text-muted-foreground">
                   Phone
