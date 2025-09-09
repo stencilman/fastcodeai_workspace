@@ -19,11 +19,11 @@ const fetchUserData = async (userId: string): Promise<User> => {
   return response.json();
 };
 
-export default function ProfilePage() {
+export default function AdminProfilePage() {
   const { data: session, status } = useSession({
     required: true,
     onUnauthenticated() {
-      redirect("/auth/signin?callbackUrl=/user/profile");
+      redirect("/auth/signin?callbackUrl=/admin/profile");
     },
   });
 
@@ -63,7 +63,7 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">My Profile</h1>
+        <h1 className="text-2xl font-semibold">Admin Profile</h1>
         <p className="text-muted-foreground mt-1">
           View and manage your profile information
         </p>

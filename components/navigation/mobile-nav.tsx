@@ -2,28 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
+import { ExternalLink } from "lucide-react";
 import {
-  Home,
-  Users,
-  FileText,
-  ExternalLink,
-  IndianRupee,
-  User,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+  adminRoutes,
+  userRoutes,
+  type Route,
+} from "@/lib/utils/navigation-routes";
 
 interface MobileNavProps {
   isAdmin: boolean;
   onItemClick?: () => void;
 }
 
-type Route = {
-  label: string;
-  href: string;
-  icon: LucideIcon;
-  external?: boolean;
-};
+// Route type is now imported from navigation-routes.ts
 
 export default function MobileNav({ isAdmin, onItemClick }: MobileNavProps) {
   const pathname = usePathname();
@@ -49,49 +41,8 @@ export default function MobileNav({ isAdmin, onItemClick }: MobileNavProps) {
     return pathname === path;
   };
 
-  const adminRoutes: Route[] = [
-    {
-      label: "Dashboard",
-      href: "/admin/dashboard",
-      icon: Home,
-    },
-    {
-      label: "Users",
-      href: "/admin/users",
-      icon: Users,
-    },
-  ];
-
-  const candidateRoutes: Route[] = [
-    {
-      label: "Dashboard",
-      href: "/user/dashboard",
-      icon: Home,
-    },
-    {
-      label: "Documents",
-      href: "/user/documents",
-      icon: FileText,
-    },
-    {
-      label: "Profile",
-      href: "/user/profile",
-      icon: User,
-    },
-    {
-      label: "General Guidelines",
-      href: "/user/general-guidelines",
-      icon: FileText,
-    },
-    {
-      label: "Expense Tracker",
-      href: "https://expense.fastcode.ai",
-      icon: IndianRupee,
-      external: true,
-    },
-  ];
-
-  const routes = isAdmin ? adminRoutes : candidateRoutes;
+  // Use the shared routes from navigation-routes.ts
+  const routes = isAdmin ? adminRoutes : userRoutes;
 
   return (
     <div className="w-full">

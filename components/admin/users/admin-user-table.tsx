@@ -27,7 +27,7 @@ import {
   ChevronsRight,
 } from "lucide-react";
 import { UserTableData, columns } from "./columns";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 
 interface AdminUserTableProps {
   users: UserTableData[];

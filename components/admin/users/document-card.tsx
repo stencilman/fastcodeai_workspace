@@ -59,7 +59,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { getDocumentUrl } from "@/lib/document-upload-service";
 
 interface DocumentCardProps {
@@ -277,7 +277,7 @@ export function DocumentCard({
       await onApprove(document.id);
       // Update local status after successful API call
       setLocalDocumentStatus(DocumentStatus.APPROVED);
-      
+
       // Clear notes when transitioning from rejected to approved
       if (document.status === DocumentStatus.REJECTED) {
         // Update the document object to remove notes
@@ -345,8 +345,9 @@ export function DocumentCard({
             )}
             {showSubmitter && document.user && (
               <span className="flex items-center gap-1">
-                Submitted by: <Link 
-                  href={`/admin/users/${document.user.id}`} 
+                Submitted by:{" "}
+                <Link
+                  href={`/admin/users/${document.user.id}`}
                   className="text-primary font-medium hover:underline"
                 >
                   {document.user.name}
@@ -354,11 +355,12 @@ export function DocumentCard({
               </span>
             )}
           </div>
-          {document.notes && localDocumentStatus === DocumentStatus.REJECTED && (
-            <div className="text-xs mt-1 italic truncate text-red-600">
-              Reason: {document.notes}
-            </div>
-          )}
+          {document.notes &&
+            localDocumentStatus === DocumentStatus.REJECTED && (
+              <div className="text-xs mt-1 italic truncate text-red-600">
+                Reason: {document.notes}
+              </div>
+            )}
         </div>
         <div className="hidden md:flex gap-2 ml-auto">
           {isPending ? (
@@ -416,7 +418,7 @@ export function DocumentCard({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 {localDocumentStatus !== DocumentStatus.APPROVED && (
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={handleApprove}
                     disabled={isProcessing}
                     className="text-green-600 focus:text-green-700 focus:bg-green-50"
@@ -425,7 +427,7 @@ export function DocumentCard({
                   </DropdownMenuItem>
                 )}
                 {localDocumentStatus !== DocumentStatus.REJECTED && (
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={handleReject}
                     disabled={isProcessing}
                     className="text-red-600 focus:text-red-700 focus:bg-red-50"
@@ -499,7 +501,7 @@ export function DocumentCard({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 {localDocumentStatus !== DocumentStatus.APPROVED && (
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={handleApprove}
                     disabled={isProcessing}
                     className="text-green-600 focus:text-green-700 focus:bg-green-50"
@@ -508,7 +510,7 @@ export function DocumentCard({
                   </DropdownMenuItem>
                 )}
                 {localDocumentStatus !== DocumentStatus.REJECTED && (
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={handleReject}
                     disabled={isProcessing}
                     className="text-red-600 focus:text-red-700 focus:bg-red-50"
@@ -586,7 +588,7 @@ export function DocumentCard({
                     className="max-w-full max-h-full object-contain"
                     onLoad={handleLoad}
                     onError={handleError}
-                    style={{ margin: '0 auto' }}
+                    style={{ margin: "0 auto" }}
                   />
                 </div>
               </div>

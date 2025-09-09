@@ -2,18 +2,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import {
-  Home,
-  Users,
-  FileText,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
-  IndianRupee,
-  User,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { adminRoutes, userRoutes, type Route } from "@/lib/utils/navigation-routes";
 import { Button } from "@/components/ui/button";
 
 interface SideNavProps {
@@ -24,12 +19,7 @@ interface SideNavProps {
   setMobileOpen?: (open: boolean) => void;
 }
 
-type Route = {
-  label: string;
-  href: string;
-  icon: LucideIcon;
-  external?: boolean;
-};
+// Route type is now imported from navigation-routes.ts
 
 export default function SideNav({
   isAdmin,
@@ -72,54 +62,8 @@ export default function SideNav({
     return pathname === path;
   };
 
-  const adminRoutes: Route[] = [
-    {
-      label: "Dashboard",
-      href: "/admin/dashboard",
-      icon: Home,
-    },
-    {
-      label: "Users",
-      href: "/admin/users",
-      icon: Users,
-    },
-    {
-      label: "Documents",
-      href: "/admin/documents",
-      icon: FileText,
-    },
-  ];
-
-  const candidateRoutes: Route[] = [
-    {
-      label: "Dashboard",
-      href: "/user/dashboard",
-      icon: Home,
-    },
-    {
-      label: "Documents",
-      href: "/user/documents",
-      icon: FileText,
-    },
-    {
-      label: "Profile",
-      href: "/user/profile",
-      icon: User,
-    },
-    {
-      label: "General Guidelines",
-      href: "/user/general-guidelines",
-      icon: FileText,
-    },
-    {
-      label: "Expense Tracker",
-      href: "https://expense.fastcode.ai",
-      icon: IndianRupee,
-      external: true,
-    },
-  ];
-
-  const routes = isAdmin ? adminRoutes : candidateRoutes;
+  // Use the shared routes from navigation-routes.ts
+  const routes = isAdmin ? adminRoutes : userRoutes;
 
   return (
     <div className={cn("fixed mt-14 p-3", isCollapsed ? "w-16" : "w-64")}>

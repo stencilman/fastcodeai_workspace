@@ -1,6 +1,6 @@
 import React from "react";
 import { Loader2, Loader } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 
 const loadingVariants = cva("animate-spin text-muted-foreground inline-block", {

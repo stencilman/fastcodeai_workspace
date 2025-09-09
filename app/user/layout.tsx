@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import SideNav from "@/components/navigation/side-nav";
 import Navbar from "@/components/navigation/navbar";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

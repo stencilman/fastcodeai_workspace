@@ -109,12 +109,10 @@ export default function Navbar() {
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          {!hasAdminRole && (
-            <DropdownMenuItem onClick={navigateToProfile}>
-              <User className="mr-2 h-4 w-4" /> Profile
-            </DropdownMenuItem>
-          )}
-          {!hasAdminRole && <DropdownMenuSeparator />}
+          <DropdownMenuItem onClick={navigateToProfile}>
+            <User className="mr-2 h-4 w-4" /> Profile
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             className="text-red-600 hover:text-red-700 hover:bg-red-50 focus:bg-red-50 focus:text-red-700"
             onClick={onSignOut}

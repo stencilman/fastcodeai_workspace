@@ -9,7 +9,7 @@ import { FaLinkedin, FaSlack } from "react-icons/fa6";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminProfileDetailsForm } from "@/components/admin/users/admin-profile-details-form";
 import { Button } from "@/components/ui/button";
-import { getDisplayBloodGroup } from "@/lib/utils";
+import { getDisplayBloodGroup } from "@/lib/utils/utils";
 import { OnboardingStatus } from "@/models/user";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -67,7 +67,8 @@ export function GeneralDetailsTab() {
       if (!response.ok) {
         if (response.status === 404) {
           toast.error("User not found", {
-            description: "The requested user does not exist or has been deleted."
+            description:
+              "The requested user does not exist or has been deleted.",
           });
           router.push("/admin/users");
         }

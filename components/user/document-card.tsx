@@ -27,7 +27,7 @@ import {
   HelpCircle,
   ExternalLink,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { requiredDocuments } from "./file-upload-drawer";
 import { getDocumentUrl } from "@/lib/document-upload-service";
 
@@ -361,7 +361,7 @@ export function DocumentCard({
                     className="max-w-full max-h-full object-contain"
                     onLoad={handleLoad}
                     onError={handleError}
-                    style={{ margin: '0 auto' }}
+                    style={{ margin: "0 auto" }}
                   />
                 </div>
               )}
