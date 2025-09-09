@@ -65,13 +65,26 @@ export const columns: ColumnDef<UserTableData>[] = [
     header: "Name",
     cell: ({ row }) => {
       const user = row.original;
-      return user.name;
+      return <div className="break-words whitespace-normal">{user.name}</div>;
     },
     size: 150,
   },
   {
     accessorKey: "email",
     header: "Email",
+    cell: ({ row }) => {
+      const email = row.getValue("email") as string;
+      if (email && email.includes('@')) {
+        const [username, domain] = email.split('@');
+        return (
+          <div className="whitespace-normal">
+            <span className="break-all">{username}</span>
+            <wbr />@{domain}
+          </div>
+        );
+      }
+      return <div className="break-words whitespace-normal">{email}</div>;
+    },
     size: 200,
   },
   {

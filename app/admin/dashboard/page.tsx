@@ -265,7 +265,10 @@ export default function AdminDashboardPage() {
               asChild
             >
               <Link href="/admin/users">
-                Manage Users <ArrowRight className="ml-auto h-4 w-4" />
+                <span className="whitespace-normal text-left">
+                  Manage Users
+                </span>
+                <ArrowRight className="ml-auto h-4 w-4 flex-shrink-0" />
               </Link>
             </Button>
           </CardFooter>
@@ -304,7 +307,10 @@ export default function AdminDashboardPage() {
               asChild
             >
               <Link href="/admin/documents">
-                Manage Documents <ArrowRight className="ml-auto h-4 w-4" />
+                <span className="whitespace-normal text-left">
+                  Manage Documents
+                </span>
+                <ArrowRight className="ml-auto h-4 w-4 flex-shrink-0" />
               </Link>
             </Button>
           </CardFooter>
@@ -333,8 +339,10 @@ export default function AdminDashboardPage() {
               asChild
             >
               <Link href="/admin/documents?tab=approved">
-                View Approved Documents{" "}
-                <ArrowRight className="ml-auto h-4 w-4" />
+                <span className="whitespace-normal text-left">
+                  View Approved Documents
+                </span>
+                <ArrowRight className="ml-auto h-4 w-4 flex-shrink-0" />
               </Link>
             </Button>
           </CardFooter>
@@ -364,8 +372,10 @@ export default function AdminDashboardPage() {
               asChild
             >
               <Link href="/admin/documents?tab=pending">
-                Review Pending Documents{" "}
-                <ArrowRight className="ml-auto h-4 w-4" />
+                <span className="whitespace-normal text-left">
+                  Review Pending Documents
+                </span>
+                <ArrowRight className="ml-auto h-4 w-4 flex-shrink-0" />
               </Link>
             </Button>
           </CardFooter>
@@ -402,12 +412,12 @@ export default function AdminDashboardPage() {
                         By{" "}
                         <Link
                           href={`/admin/users/${activity.userId}`}
-                          className="font-medium hover:underline text-primary"
+                          className="font-medium hover:underline text-primary break-words"
                         >
                           {activity.user.name}
                         </Link>
                       </p>
-                      <p className="text-sm text-muted-foreground truncate max-w-[250px]">
+                      <p className="text-sm text-muted-foreground break-words">
                         {activity.fileName}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -455,7 +465,7 @@ export default function AdminDashboardPage() {
                       <div className="flex items-center justify-between">
                         <Link
                           href={`/admin/users/${user.id}`}
-                          className="font-medium hover:underline text-primary"
+                          className="font-medium hover:underline text-primary break-words"
                         >
                           {user.name}
                         </Link>
@@ -476,7 +486,7 @@ export default function AdminDashboardPage() {
                             : "In Progress"}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground break-words">
                         {user.email}
                       </p>
                       <p className="text-xs text-muted-foreground">

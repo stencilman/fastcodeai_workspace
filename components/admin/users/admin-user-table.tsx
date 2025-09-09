@@ -77,6 +77,23 @@ export function AdminUserTable({ users, pageSize = 10 }: AdminUserTableProps) {
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center px-2 mb-2">
+        <div className="flex-1 text-sm text-muted-foreground">
+          Showing{" "}
+          {table.getFilteredRowModel().rows.length > 0
+            ? table.getState().pagination.pageIndex *
+                table.getState().pagination.pageSize +
+              1
+            : 0}{" "}
+          to{" "}
+          {Math.min(
+            (table.getState().pagination.pageIndex + 1) *
+              table.getState().pagination.pageSize,
+            table.getFilteredRowModel().rows.length
+          )}{" "}
+          of {table.getFilteredRowModel().rows.length} entries
+        </div>
+      </div>
       <div className="rounded-md border">
         <Table className="table-fixed w-full">
           <TableHeader>
@@ -117,6 +134,7 @@ export function AdminUserTable({ users, pageSize = 10 }: AdminUserTableProps) {
                     <TableCell
                       key={cell.id}
                       className={cn(
+                        "py-2",
                         columnClasses[
                           cell.column.id as keyof typeof columnClasses
                         ] || ""
@@ -145,22 +163,7 @@ export function AdminUserTable({ users, pageSize = 10 }: AdminUserTableProps) {
       </div>
 
       {/* Pagination Controls */}
-      <div className="flex items-center justify-between px-2">
-        <div className="flex-1 text-sm text-muted-foreground">
-          Showing{" "}
-          {table.getFilteredRowModel().rows.length > 0
-            ? table.getState().pagination.pageIndex *
-                table.getState().pagination.pageSize +
-              1
-            : 0}{" "}
-          to{" "}
-          {Math.min(
-            (table.getState().pagination.pageIndex + 1) *
-              table.getState().pagination.pageSize,
-            table.getFilteredRowModel().rows.length
-          )}{" "}
-          of {table.getFilteredRowModel().rows.length} entries
-        </div>
+      <div className="flex items-center justify-end px-2 w-full">
         <div className="flex items-center space-x-2">
           <Button
             variant="outline"
@@ -178,11 +181,16 @@ export function AdminUserTable({ users, pageSize = 10 }: AdminUserTableProps) {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <div className="flex items-center gap-1">
+          <div className="hidden sm:flex items-center gap-1">
             <span className="text-sm font-medium">Page</span>
             <span className="text-sm font-medium">
-              {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
+              {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+            </span>
+          </div>
+          <div className="sm:hidden flex flex-col items-center justify-center min-w-[80px]">
+            <span className="text-sm font-medium">Page</span>
+            <span className="text-sm font-medium">
+              {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
             </span>
           </div>
           <Button
