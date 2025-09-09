@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { CommunicationTab } from "@/components/user/general-guidelines/communication-tab";
 import { OfficeEntryTab } from "@/components/user/general-guidelines/office-entry-tab";
+import { HolidaysTab } from "@/components/user/general-guidelines/holidays-tab";
 
 export default function GeneralGuidelinesPage() {
   const [activeTab, setActiveTab] = useState("communication");
@@ -41,6 +42,12 @@ export default function GeneralGuidelinesPage() {
             >
               Office Entry
             </TabsTrigger>
+            <TabsTrigger
+              value="holidays"
+              className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary px-6 md:flex-1"
+            >
+              Holidays
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -52,6 +59,11 @@ export default function GeneralGuidelinesPage() {
         {/* Office Entry Tab Content */}
         <TabsContent value="office-entry" className="mt-6">
           <OfficeEntryTab />
+        </TabsContent>
+
+        {/* Holidays Tab Content */}
+        <TabsContent value="holidays" className="mt-6">
+          <HolidaysTab />
         </TabsContent>
       </Tabs>
     </div>
