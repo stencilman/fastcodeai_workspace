@@ -156,14 +156,7 @@ export function DocumentCard({
 
     // For PDF documents
     if (isPdf) {
-      return (
-        <div className="relative">
-          <FileText className="h-12 w-12 text-gray-500" />
-          <div className="absolute -bottom-1 -right-1 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-            <Eye className="h-3 w-3" />
-          </div>
-        </div>
-      );
+      return <FileText className="h-12 w-12 text-gray-500" />;
     }
 
     // Default document icon for other types
@@ -327,10 +320,13 @@ export function DocumentCard({
     <Card className="overflow-hidden">
       <div className="p-4 flex flex-col md:flex-row md:items-center gap-4">
         <div
-          className="bg-slate-100 p-3 rounded-md flex items-center justify-center cursor-pointer hover:bg-slate-200 transition-colors flex-shrink-0"
+          className="bg-slate-100 p-3 rounded-md flex items-center justify-center cursor-pointer hover:bg-slate-200 transition-colors flex-shrink-0 relative group"
           onClick={openDialog}
         >
           {getDocumentIcon()}
+          <div className="absolute inset-0 bg-black/50 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <Eye className="h-6 w-6 text-white" />
+          </div>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1">
