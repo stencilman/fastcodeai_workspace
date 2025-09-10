@@ -1,13 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, UserRole } from "@/models/user";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { Document, DocumentStatus, DocumentType } from "@/models/document";
-import { toast } from "sonner";
 import { GeneralDetailsTab } from "@/components/admin/users/general-details-tab";
 import { DocumentsTab } from "@/components/admin/users/documents-tab";
 

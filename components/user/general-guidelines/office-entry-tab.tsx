@@ -25,7 +25,7 @@ export function OfficeEntryTab() {
           Bhive Workspace Access
         </CardTitle>
         <CardDescription>
-          We use Bhive Workspace for our office space. You'll need to
+          We use Bhive Workspace for our office space. You&apos;ll need to
           purchase a Bulk Day Pass.
         </CardDescription>
       </CardHeader>
@@ -39,7 +39,7 @@ export function OfficeEntryTab() {
             Download the Bhive App
           </h3>
           <p className="text-sm text-muted-foreground">
-            Download the Bhive Workspace app from your device's app store.
+            Download the Bhive Workspace app from your device&apos;s app store.
           </p>
           <div className="flex flex-wrap gap-3 mt-2">
             <Button

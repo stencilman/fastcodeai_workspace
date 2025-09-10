@@ -5,12 +5,12 @@ import { getUserByEmail } from '@/data/user';
 import { updateDocumentStatus } from '@/data/documents';
 
 export async function POST(
-    req: NextRequest,
-    { params }: { params: { id: string } }
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    // Extract id from params to fix Next.js 14 dynamic route params issue
-    const { id } = params;
-    
+    // Get the id from params
+    const { id } = await params;
+
     const session = await auth();
     if (!session?.user?.email) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -24,7 +24,7 @@ export async function POST(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
-        const { status, notes } = await req.json();
+        const { status, notes } = await request.json();
 
         if (!status || !['APPROVED', 'REJECTED'].includes(status)) {
             return NextResponse.json(

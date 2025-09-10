@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
 import { AdminUserTable } from "@/components/admin/users/admin-user-table";
 import { UserTableData } from "@/components/admin/users/columns";
 import { Loading } from "@/components/ui/loading";
 import { Toaster } from "sonner";
+import { User } from "@/models/user";
 import {
   Select,
   SelectContent,
@@ -21,7 +21,7 @@ const fetchUsers = async (): Promise<UserTableData[]> => {
   const data = await response.json();
 
   // Convert string dates to Date objects for the table
-  return data.map((user: any) => ({
+  return data.map((user: User) => ({
     ...user,
     createdAt: new Date(user.createdAt),
     updatedAt: new Date(user.updatedAt),

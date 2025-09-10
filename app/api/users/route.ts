@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllUsers, getUsersByRole, createUser } from "@/data/user";
+import { getUsersByRole, createUser } from "@/data/user";
 import { UserRole, CreateUserInput } from "@/models/user";
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
     try {
         // Get only non-admin users (employees/candidates)
         const users = await getUsersByRole(UserRole.USER);

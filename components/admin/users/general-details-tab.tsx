@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, ExternalLink, Pencil, Check, X } from "lucide-react";
+import { Loader2, ExternalLink, Pencil, Check } from "lucide-react";
 import { FaLinkedin, FaSlack } from "react-icons/fa6";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminProfileDetailsForm } from "@/components/admin/users/admin-profile-details-form";
@@ -105,7 +105,8 @@ export function GeneralDetailsTab() {
       }
       // If we can't parse it, just return the URL
       return url;
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_error) {
       return url;
     }
   };

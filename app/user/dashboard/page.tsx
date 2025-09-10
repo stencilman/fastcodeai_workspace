@@ -28,7 +28,6 @@ import {
   FileX,
   Upload,
   User,
-  UserCircle,
 } from "lucide-react";
 import { DocumentStatus, DocumentType } from "@/models/document";
 import { formatDistanceToNow } from "date-fns";
@@ -99,7 +98,7 @@ const StatusBadge = ({ status }: { status: DocumentStatus }) => {
 };
 
 export default function UserDashboardPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   
   // Use React Query for data fetching with caching
   const { data: dashboardData, isLoading, error } = useQuery<DashboardData, Error>({

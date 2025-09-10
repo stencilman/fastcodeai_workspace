@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { getUserById } from '@/data/user';
+// User data is fetched directly from the session
 import { DocumentStatus, DocumentType } from '@/models/document';
 import { OnboardingStatus } from '@/models/user';
 
 // Calculate profile completion percentage based on filled fields
-function calculateProfileCompletion(user: any): number {
+function calculateProfileCompletion(user: { [key: string]: unknown }): number {
     // Define required fields for a complete profile
     const requiredFields = [
         'name',
@@ -30,7 +30,7 @@ function calculateProfileCompletion(user: any): number {
 }
 
 // Get dashboard data for the current user
-export async function GET(req: NextRequest) {
+export async function GET() {
     const startTime = Date.now();
     const session = await auth();
     if (!session?.user?.email) {
@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
         const documentsCompletion = Math.round((uploadedDocumentTypes.length / requiredDocumentTypes.length) * 100);
 
         // Handle onboardingStatus with type safety
-        const userOnboardingStatus = (user as any).onboardingStatus || OnboardingStatus.IN_PROGRESS;
+        const userOnboardingStatus = (user as { onboardingStatus?: OnboardingStatus }).onboardingStatus || OnboardingStatus.IN_PROGRESS;
 
         const onboardingStatus = {
             status: userOnboardingStatus === OnboardingStatus.COMPLETED

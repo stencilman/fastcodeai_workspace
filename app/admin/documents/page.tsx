@@ -1,9 +1,11 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
-import { Document as BaseDocument, DocumentStatus, DocumentType } from "@/models/document";
+import { Document as BaseDocument, DocumentStatus } from "@/models/document";
 import { toast } from "sonner";
 
 // Extended Document interface with additional properties from API response
@@ -17,75 +19,40 @@ interface Document extends BaseDocument {
 }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loading } from "@/components/ui/loading";
-import { FileText, Eye, Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import Image from "next/image";
-import Link from "next/link";
-import { format, formatDistanceToNow } from "date-fns";
 import { DocumentCard } from "@/components/admin/users/document-card";
 
-// Document type names for display
-const documentTypeNames: Record<DocumentType, string> = {
-  [DocumentType.PAN_CARD]: "PAN Card",
-  [DocumentType.AADHAR_CARD]: "Aadhaar Card",
-  [DocumentType.CANCELLED_CHEQUE]: "Cancelled Cheque",
-  [DocumentType.OFFER_LETTER]: "Offer Letter",
-};
-
-// Status badge component
-const StatusBadge = ({ status }: { status: DocumentStatus }) => {
-  const variants: Record<DocumentStatus, { color: string; label: string }> = {
-    [DocumentStatus.PENDING]: {
-      color: "bg-yellow-100 text-yellow-800 border-yellow-200",
-      label: "Pending",
-    },
-    [DocumentStatus.APPROVED]: {
-      color: "bg-green-100 text-green-800 border-green-200",
-      label: "Approved",
-    },
-    [DocumentStatus.REJECTED]: {
-      color: "bg-red-100 text-red-800 border-red-200",
-      label: "Rejected",
-    },
-  };
-
-  return (
-    <Badge
-      variant="outline"
-      className={`${variants[status].color} border`}
-    >
-      {variants[status].label}
-    </Badge>
-  );
-};
-
 // Function to fetch all documents from the API
-const fetchAllDocuments = async (): Promise<any> => {
+const fetchAllDocuments = async (): Promise<{ documents: Document[] }> => {
   const response = await fetch("/api/admin/documents");
-  
+
   if (!response.ok) {
     throw new Error("Failed to fetch documents");
   }
-  
+
   return response.json();
 };
 
 // API function for document review (approval/rejection)
-const reviewDocument = async (documentId: string, status: 'APPROVED' | 'REJECTED', notes?: string) => {
+const reviewDocument = async (
+  documentId: string,
+  status: "APPROVED" | "REJECTED",
+  notes?: string
+) => {
   const response = await fetch(`/api/admin/documents/${documentId}/review`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({ status, notes }),
   });
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || `Failed to ${status.toLowerCase()} document`);
+    throw new Error(
+      error.message || `Failed to ${status.toLowerCase()} document`
+    );
   }
 };
 
@@ -93,12 +60,19 @@ export default function AdminDocumentsPage() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState<string>(tabParam || "all");
-  const [processingDocumentId, setProcessingDocumentId] = useState<string | null>(null);
-  const [processingAction, setProcessingAction] = useState<"approve" | "reject" | null>(null);
-  
+  const [processingDocumentId, setProcessingDocumentId] = useState<
+    string | null
+  >(null);
+  const [processingAction, setProcessingAction] = useState<
+    "approve" | "reject" | null
+  >(null);
+
   // Update active tab when URL parameter changes
   useEffect(() => {
-    if (tabParam && ["all", "pending", "approved", "rejected"].includes(tabParam)) {
+    if (
+      tabParam &&
+      ["all", "pending", "approved", "rejected"].includes(tabParam)
+    ) {
       setActiveTab(tabParam);
     } else {
       setActiveTab("all");
@@ -114,19 +88,14 @@ export default function AdminDocumentsPage() {
   };
 
   // Fetch all documents once
-  const {
-    data,
-    isLoading,
-    error,
-    refetch
-  } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["adminDocuments"],
     queryFn: fetchAllDocuments,
     staleTime: 0, // Consider data stale immediately
-    refetchOnMount: 'always', // Always refetch when component mounts
+    refetchOnMount: "always", // Always refetch when component mounts
     refetchOnWindowFocus: true, // Refetch when window regains focus
   });
-  
+
   // Define the expected data structure
   interface DocumentsResponse {
     documents: Document[];
@@ -137,11 +106,10 @@ export default function AdminDocumentsPage() {
       rejected: number;
     };
   }
-  
+
   // Get all documents from the response
-  const allDocuments = ((data as DocumentsResponse)?.documents) || [];
-  const allCounts = ((data as DocumentsResponse)?.counts) || { total: 0, pending: 0, approved: 0, rejected: 0 };
-  
+  const allDocuments = (data as DocumentsResponse)?.documents || [];
+
   // Filter documents based on active tab - client-side filtering
   const filteredDocuments = allDocuments.filter((doc: Document) => {
     if (activeTab === "all") return true;
@@ -149,7 +117,7 @@ export default function AdminDocumentsPage() {
   });
 
   // DocumentCard component handles preview internally
-  
+
   // Handle document approval
   const handleApprove = async (documentId: string) => {
     try {
@@ -188,10 +156,7 @@ export default function AdminDocumentsPage() {
     }
   };
 
-  // Check if a file is an image
-  const isImage = (fileType: string): boolean => {
-    return /^image\/(jpeg|jpg|png|gif|webp|svg\+xml)$/.test(fileType);
-  };
+  // File type checking is handled in the DocumentCard component
 
   if (isLoading) {
     return (
@@ -209,13 +174,18 @@ export default function AdminDocumentsPage() {
       </div>
     );
   }
-  
+
   // Calculate counts for the tabs
   const counts = {
     total: allDocuments.length,
-    pending: allDocuments.filter(doc => doc.status === DocumentStatus.PENDING).length,
-    approved: allDocuments.filter(doc => doc.status === DocumentStatus.APPROVED).length,
-    rejected: allDocuments.filter(doc => doc.status === DocumentStatus.REJECTED).length
+    pending: allDocuments.filter((doc) => doc.status === DocumentStatus.PENDING)
+      .length,
+    approved: allDocuments.filter(
+      (doc) => doc.status === DocumentStatus.APPROVED
+    ).length,
+    rejected: allDocuments.filter(
+      (doc) => doc.status === DocumentStatus.REJECTED
+    ).length,
   };
 
   return (
@@ -232,26 +202,34 @@ export default function AdminDocumentsPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-4 bg-slate-50 border">
           <div className="flex flex-col">
-            <span className="text-sm text-muted-foreground">Total Documents</span>
+            <span className="text-sm text-muted-foreground">
+              Total Documents
+            </span>
             <span className="text-2xl font-bold">{counts.total}</span>
           </div>
         </Card>
         <Card className="p-4 bg-yellow-50 border border-yellow-100">
           <div className="flex flex-col">
             <span className="text-sm text-yellow-800">Pending Review</span>
-            <span className="text-2xl font-bold text-yellow-800">{counts.pending}</span>
+            <span className="text-2xl font-bold text-yellow-800">
+              {counts.pending}
+            </span>
           </div>
         </Card>
         <Card className="p-4 bg-green-50 border border-green-100">
           <div className="flex flex-col">
             <span className="text-sm text-green-800">Approved</span>
-            <span className="text-2xl font-bold text-green-800">{counts.approved}</span>
+            <span className="text-2xl font-bold text-green-800">
+              {counts.approved}
+            </span>
           </div>
         </Card>
         <Card className="p-4 bg-red-50 border border-red-100">
           <div className="flex flex-col">
             <span className="text-sm text-red-800">Rejected</span>
-            <span className="text-2xl font-bold text-red-800">{counts.rejected}</span>
+            <span className="text-2xl font-bold text-red-800">
+              {counts.rejected}
+            </span>
           </div>
         </Card>
       </div>
@@ -297,7 +275,9 @@ export default function AdminDocumentsPage() {
                   onApprove={handleApprove}
                   onReject={handleReject}
                   isProcessing={processingDocumentId === doc.id}
-                  processingAction={processingDocumentId === doc.id ? processingAction : null}
+                  processingAction={
+                    processingDocumentId === doc.id ? processingAction : null
+                  }
                   showSubmitter={true}
                 />
               ))}

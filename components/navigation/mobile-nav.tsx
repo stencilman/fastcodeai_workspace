@@ -7,7 +7,6 @@ import { ExternalLink } from "lucide-react";
 import {
   adminRoutes,
   userRoutes,
-  type Route,
 } from "@/lib/utils/navigation-routes";
 
 interface MobileNavProps {

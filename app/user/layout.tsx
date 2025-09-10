@@ -60,7 +60,6 @@ export default function UserLayout({
               isAdmin={false}
               collapsed={collapsed}
               setCollapsed={setCollapsed}
-              mobileOpen={mobileOpen}
               setMobileOpen={setMobileOpen}
             />
           )}

@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
 
         // Generate presigned URLs for each document
         const documentsWithUrls = await Promise.all(
-            documents.map(async (doc: any) => {
+            documents.map(async (doc: { s3Key: string, [key: string]: unknown }) => {
                 const url = await s3Service.getPresignedDownloadUrl(doc.s3Key);
                 return { ...doc, url };
             })

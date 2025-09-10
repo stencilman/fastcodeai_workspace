@@ -8,14 +8,13 @@ import {
   ChevronRight,
   ExternalLink,
 } from "lucide-react";
-import { adminRoutes, userRoutes, type Route } from "@/lib/utils/navigation-routes";
+import { adminRoutes, userRoutes } from "@/lib/utils/navigation-routes";
 import { Button } from "@/components/ui/button";
 
 interface SideNavProps {
   isAdmin: boolean;
   collapsed?: boolean;
   setCollapsed?: (collapsed: boolean) => void;
-  mobileOpen?: boolean;
   setMobileOpen?: (open: boolean) => void;
 }
 
@@ -25,7 +24,6 @@ export default function SideNav({
   isAdmin,
   collapsed = false,
   setCollapsed,
-  mobileOpen = false,
   setMobileOpen,
 }: SideNavProps) {
   const pathname = usePathname();

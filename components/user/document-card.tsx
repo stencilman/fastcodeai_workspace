@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { DocumentType, DocumentStatus } from "@/models/document";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,10 +16,6 @@ import {
 import { Loading } from "@/components/ui/loading";
 import {
   FileText,
-  FileImage,
-  CreditCard,
-  FileCheck,
-  Download,
   Upload,
   AlertCircle,
   CheckCircle,
@@ -113,11 +110,13 @@ export function DocumentCard({
     if (isImage) {
       if (thumbnailUrl) {
         return (
-          <div className="w-12 h-12 overflow-hidden rounded-md">
-            <img
+          <div className="w-12 h-12 overflow-hidden rounded-md relative">
+            <Image
               src={thumbnailUrl}
               alt={document.fileName}
-              className="w-full h-full object-cover"
+              fill
+              sizes="48px"
+              className="object-cover"
             />
           </div>
         );
@@ -352,15 +351,19 @@ export function DocumentCard({
                   ></iframe>
                 )
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-100 overflow-hidden">
-                  <img
-                    src={documentUrl || undefined}
-                    alt={documentName}
-                    className="max-w-full max-h-full object-contain"
-                    onLoad={handleLoad}
-                    onError={handleError}
-                    style={{ margin: "0 auto" }}
-                  />
+                <div className="w-full h-full flex items-center justify-center bg-gray-100 overflow-hidden relative">
+                  {documentUrl && (
+                    <Image
+                      src={documentUrl}
+                      alt={documentName}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 80vw"
+                      className="object-contain"
+                      onLoad={handleLoad}
+                      onError={handleError}
+                      style={{ margin: "0 auto" }}
+                    />
+                  )}
                 </div>
               )}
             </div>

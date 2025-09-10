@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { DocumentStatus, DocumentType } from "@/models/document";
 import Link from "next/link";
 
@@ -24,35 +25,12 @@ interface Document {
 }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loading } from "@/components/ui/loading";
-import {
-  Check,
-  X,
-  FileText,
-  FileImage,
-  CreditCard,
-  FileCheck,
-  ExternalLink,
-  Download,
-  Eye,
-  MoreVertical,
-} from "lucide-react";
+import { Check, X, FileText, ExternalLink, Eye, MoreVertical } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -79,7 +57,7 @@ export function DocumentCard({
   processingAction = null,
   showSubmitter = false,
 }: DocumentCardProps) {
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  // Preview is now handled by the dialog system
   const [isLoading, setIsLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pdfError, setPdfError] = useState(false);
@@ -136,11 +114,13 @@ export function DocumentCard({
     if (isImage) {
       if (thumbnailUrl) {
         return (
-          <div className="w-12 h-12 overflow-hidden rounded-md">
-            <img
+          <div className="w-12 h-12 overflow-hidden rounded-md relative">
+            <Image
               src={thumbnailUrl}
               alt={document.fileName}
-              className="w-full h-full object-cover"
+              fill
+              sizes="48px"
+              className="object-cover"
             />
           </div>
         );
@@ -236,10 +216,7 @@ export function DocumentCard({
 
   const isPending = localDocumentStatus === DocumentStatus.PENDING;
 
-  const togglePreview = () => {
-    setIsPreviewOpen(!isPreviewOpen);
-    setIsLoading(true);
-  };
+  // Preview is now handled by the dialog system
 
   const handleLoad = () => {
     setIsLoading(false);
@@ -577,15 +554,18 @@ export function DocumentCard({
               )
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gray-100 overflow-hidden">
-                <div className="flex items-center justify-center w-full h-full">
-                  <img
-                    src={documentUrl || undefined}
-                    alt={documentName}
-                    className="max-w-full max-h-full object-contain"
-                    onLoad={handleLoad}
-                    onError={handleError}
-                    style={{ margin: "0 auto" }}
-                  />
+                <div className="flex items-center justify-center w-full h-full relative">
+                  {documentUrl && (
+                    <Image
+                      src={documentUrl}
+                      alt={documentName}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 80vw"
+                      className="object-contain"
+                      onLoad={handleLoad}
+                      onError={handleError}
+                    />
+                  )}
                 </div>
               </div>
             )}

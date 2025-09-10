@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDocumentById, updateDocumentStatus } from "@/data/documents";
+import { updateDocumentStatus } from "@/data/documents";
 import { DocumentStatus } from "@/models/document";
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const { id } = params;
+    const { id } = await params;
 
     try {
         const body = await request.json();
@@ -34,7 +34,8 @@ export async function POST(
         }
 
         return NextResponse.json(updatedDocument);
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_error) {
         return new NextResponse(JSON.stringify({ error: "Failed to process request" }), {
             status: 500,
             headers: { "Content-Type": "application/json" },

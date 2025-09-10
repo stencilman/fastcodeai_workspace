@@ -120,7 +120,7 @@ const fetchDashboardData = async (): Promise<AdminDashboardData> => {
 };
 
 export default function AdminDashboardPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
 
   // Use React Query for data fetching with caching
   const {

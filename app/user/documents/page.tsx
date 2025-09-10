@@ -144,7 +144,7 @@ export default function UserDocumentsPage() {
       );
 
       // Step 2: Upload file to S3 through the backend
-      const downloadUrl = await uploadFileToS3(file, documentId);
+      await uploadFileToS3(file, documentId);
 
       // Step 3: Refresh the documents list
       await refetch();
@@ -293,7 +293,7 @@ export default function UserDocumentsPage() {
                       No pending documents
                     </h3>
                     <p className="text-muted-foreground mt-1">
-                      You don't have any documents pending approval.
+                      You don&apos;t have any documents pending approval.
                     </p>
                   </div>
                 );
@@ -319,7 +319,7 @@ export default function UserDocumentsPage() {
               <FileText className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
               <h3 className="font-medium text-lg">No approved documents</h3>
               <p className="text-muted-foreground mt-1">
-                You don't have any approved documents yet.
+                You don&apos;t have any approved documents yet.
               </p>
             </div>
           )}
@@ -342,7 +342,7 @@ export default function UserDocumentsPage() {
               <FileText className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
               <h3 className="font-medium text-lg">No rejected documents</h3>
               <p className="text-muted-foreground mt-1">
-                You don't have any rejected documents.
+                You don&apos;t have any rejected documents.
               </p>
             </div>
           )}

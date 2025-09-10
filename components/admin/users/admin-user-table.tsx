@@ -55,7 +55,7 @@ export function AdminUserTable({ users, pageSize = 10 }: AdminUserTableProps) {
 
   // Update pagination state when pageSize prop changes
   useEffect(() => {
-    setPagination((prev) => ({
+    setPagination(() => ({
       pageIndex: 0, // Reset to first page when page size changes
       pageSize: pageSize,
     }));

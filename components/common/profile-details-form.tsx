@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -70,7 +70,7 @@ const updateUserProfile = async (
   data: FormValues
 ): Promise<User> => {
   // Convert A+ format to A_POSITIVE format for the API
-  let apiData = { ...data };
+  const apiData = { ...data };
 
   if (apiData.bloodGroup) {
     // Map the display value to the enum value expected by the API
@@ -145,7 +145,8 @@ const extractLinkedInUsername = (url: string): string => {
     }
     // If we can't parse it, just return the URL
     return url;
-  } catch (error) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_error) {
     return url;
   }
 };
@@ -176,11 +177,11 @@ function SlackIdTooltip() {
             picture on the bottom left
           </div>
           <div>
-            <span className="font-medium">Step 3:</span> Select "Profile"
+            <span className="font-medium">Step 3:</span> Select &quot;Profile&quot;
           </div>
           <div>
             <span className="font-medium">Step 4:</span> Click the vertical
-            three dots (⋮) and select "Copy member ID"
+            three dots (⋮) and select &quot;Copy member ID&quot;
           </div>
         </div>
       </TooltipContent>
@@ -196,15 +197,15 @@ export function ProfileDetailsForm({
   const [isEditing, setIsEditing] = useState(false);
   const queryClient = useQueryClient();
 
-  // Initialize form with user data
-  const defaultValues = {
+  // Initialize form with user data using useMemo to avoid dependency issues
+  const defaultValues = useMemo(() => ({
     name: userData.name || "",
     phone: userData.phone || "",
     address: userData.address || "",
     linkedinProfile: userData.linkedinProfile || "",
     bloodGroup: getDisplayBloodGroup(userData.bloodGroup),
     slackUserId: userData.slackUserId || "",
-  };
+  }), [userData]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),

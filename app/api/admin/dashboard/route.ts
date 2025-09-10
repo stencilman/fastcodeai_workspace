@@ -1,11 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { DocumentStatus, DocumentType } from '@/models/document';
-import { UserRole } from '@/models/user';
 
 // Get dashboard data for admin
-export async function GET(req: NextRequest) {
+export async function GET() {
     const startTime = Date.now();
     const session = await auth();
 

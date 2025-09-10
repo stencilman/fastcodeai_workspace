@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { S3Service } from '@/lib/s3-service';
-import { DocumentStatus } from '@/models/document';
+import { DocumentStatus, DocumentType } from '@/models/document';
 
 const s3Service = new S3Service();
 
 // Get all documents for admin with filtering options
 export async function GET(req: NextRequest) {
     const session = await auth();
-    
+
     // Check if user is authenticated and is an admin
     if (!session?.user?.email) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -30,22 +30,27 @@ export async function GET(req: NextRequest) {
         const status = url.searchParams.get('status');
         const userId = url.searchParams.get('userId');
         const type = url.searchParams.get('type');
-        
+
         // Build where clause for filtering
-        const whereClause: any = {};
-        
+        // Using Prisma's type for the where clause
+        const whereClause: {
+            status?: DocumentStatus;
+            userId?: string;
+            type?: DocumentType;
+        } = {};
+
         if (status) {
-            whereClause.status = status;
+            whereClause.status = status as DocumentStatus;
         }
-        
+
         if (userId) {
             whereClause.userId = userId;
         }
-        
+
         if (type) {
-            whereClause.type = type;
+            whereClause.type = type as DocumentType;
         }
-        
+
         // Fetch documents with filters
         const documents = await db.document.findMany({
             where: whereClause,
@@ -60,7 +65,7 @@ export async function GET(req: NextRequest) {
                 }
             }
         });
-        
+
         // Get document counts by status
         const totalDocuments = await db.document.count();
         const pendingDocuments = await db.document.count({ where: { status: DocumentStatus.PENDING } });
@@ -69,7 +74,7 @@ export async function GET(req: NextRequest) {
 
         // Generate presigned URLs for each document
         const documentsWithUrls = await Promise.all(
-            documents.map(async (doc: any) => {
+            documents.map(async (doc: { s3Key: string;[key: string]: unknown }) => {
                 const url = await s3Service.getPresignedDownloadUrl(doc.s3Key);
                 return { ...doc, url };
             })

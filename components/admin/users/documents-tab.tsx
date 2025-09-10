@@ -3,7 +3,6 @@ import { Document, DocumentStatus } from "@/models/document";
 import { TabsContent } from "@/components/ui/tabs";
 import { DocumentCard } from "@/components/admin/users/document-card";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loading } from "@/components/ui/loading";
@@ -66,7 +65,7 @@ export function DocumentsTab() {
       // Optimistically update the cache
       queryClient.setQueryData(
         ["documents", userId],
-        (oldData: any | undefined) => {
+        (oldData: { documents: Document[] } | undefined) => {
           if (!oldData) return { documents: [] };
           return {
             documents: oldData.documents.map((doc: Document) =>
@@ -127,7 +126,7 @@ export function DocumentsTab() {
       // Optimistically update the cache
       queryClient.setQueryData(
         ["documents", userId],
-        (oldData: any | undefined) => {
+        (oldData: { documents: Document[] } | undefined) => {
           if (!oldData) return { documents: [] };
           return {
             documents: oldData.documents.map((doc: Document) =>

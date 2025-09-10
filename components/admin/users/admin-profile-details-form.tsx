@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -9,14 +9,12 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -65,7 +63,7 @@ const updateUserProfile = async (
   data: FormValues
 ): Promise<User> => {
   // Convert A+ format to A_POSITIVE format for the API
-  let apiData = { ...data };
+  const apiData = { ...data };
 
   if (apiData.bloodGroup) {
     // Map the display value to the enum value expected by the API
@@ -128,8 +126,8 @@ export function AdminProfileDetailsForm({
     return bloodGroupMapping[bloodGroup as string] || undefined;
   };
 
-  // Initialize form with user data
-  const defaultValues = {
+  // Initialize form with user data using useMemo to avoid dependency issues
+  const defaultValues = useMemo(() => ({
     name: userData.name || "",
     phone: userData.phone || "",
     address: userData.address || "",
@@ -137,7 +135,7 @@ export function AdminProfileDetailsForm({
     bloodGroup: getDisplayBloodGroup(userData.bloodGroup),
     role: userData.role || UserRole.USER,
     slackUserId: userData.slackUserId || "",
-  };
+  }), [userData]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),

@@ -52,7 +52,6 @@ export default function AdminLayout({
             isAdmin
             collapsed={collapsed}
             setCollapsed={setCollapsed}
-            mobileOpen={mobileOpen}
             setMobileOpen={setMobileOpen}
           />
         </aside>

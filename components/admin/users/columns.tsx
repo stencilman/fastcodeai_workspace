@@ -1,6 +1,6 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, Row } from "@tanstack/react-table";
 import { UserRole, OnboardingStatus } from "@/models/user";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,16 +48,7 @@ export type UserTableData = {
   updatedAt: Date;
 };
 
-// Define column classes for consistent widths
-const columnClasses = {
-  name: "w-[150px]",
-  email: "w-[200px]",
-  role: "w-[100px]",
-  onboardingStatus: "w-[120px]",
-  createdAt: "w-[100px]",
-  updatedAt: "w-[100px]",
-  actions: "w-[80px]",
-};
+// Column widths are defined directly in the column definitions
 
 export const columns: ColumnDef<UserTableData>[] = [
   {
@@ -142,106 +133,110 @@ export const columns: ColumnDef<UserTableData>[] = [
   },
   {
     id: "actions",
-    cell: ({ row }) => {
-      const user = row.original;
-      const queryClient = useQueryClient();
-      
-      const handleOnboardingStatusUpdate = async (e: React.MouseEvent, status: OnboardingStatus) => {
-        e.stopPropagation();
-        try {
-          await updateOnboardingStatus(user.id, status);
-          const message = status === OnboardingStatus.COMPLETED 
-            ? "Onboarding marked as completed" 
-            : "Onboarding marked as in progress";
-          toast.success(message);
-          // Invalidate and refetch users data
-          queryClient.invalidateQueries({ queryKey: ["users"] });
-        } catch (error) {
-          toast.error("Failed to update onboarding status");
-        }
-      };
-      
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 p-0"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">Open menu</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-            <DropdownMenuItem asChild>
-              <Link
-                href={`/admin/users/${user.id}?tab=documents`}
-                className="flex items-center gap-2"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <FileText className="h-4 w-4" />
-                <span>Documents</span>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link
-                href={`/admin/users/${user.id}?edit=true`}
-                className="flex items-center gap-2"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Edit className="h-4 w-4" />
-                <span>Edit</span>
-              </Link>
-            </DropdownMenuItem>
-            {user.onboardingStatus === OnboardingStatus.IN_PROGRESS ? (
-              <DropdownMenuItem
-                onClick={(e) => handleOnboardingStatusUpdate(e, OnboardingStatus.COMPLETED)}
-                className="flex items-center gap-2 text-green-600"
-              >
-                <CheckCircle className="h-4 w-4" />
-                <span>Mark as Complete</span>
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem
-                onClick={(e) => handleOnboardingStatusUpdate(e, OnboardingStatus.IN_PROGRESS)}
-                className="flex items-center gap-2 text-amber-600"
-              >
-                <CheckCircle className="h-4 w-4" />
-                <span>Mark as Incomplete</span>
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={async (e) => {
-                e.stopPropagation();
-                try {
-                  const response = await fetch(`/api/users/${user.id}`, {
-                    method: 'DELETE',
-                  });
-                  
-                  if (!response.ok) {
-                    throw new Error('Failed to delete user');
-                  }
-                  
-                  toast.success('User deleted successfully');
-                  // Invalidate and refetch users data
-                  queryClient.invalidateQueries({ queryKey: ['users'] });
-                } catch (error) {
-                  console.error('Error deleting user:', error);
-                  toast.error('Failed to delete user');
-                }
-              }}
-              className="flex items-center gap-2 text-destructive"
-            >
-              <Trash className="h-4 w-4" />
-              <span>Delete</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-    size: 100,
-  },
+    cell: ({ row }) => <ActionCell row={row} />,
+    size: 100
+  }
 ];
+
+// Separate component to use React hooks properly
+function ActionCell({ row }: { row: Row<UserTableData> }) {
+  const user = row.original;
+  const queryClient = useQueryClient();
+  
+  const handleOnboardingStatusUpdate = async (e: React.MouseEvent, status: OnboardingStatus) => {
+    e.stopPropagation();
+    try {
+      await updateOnboardingStatus(user.id, status);
+      const message = status === OnboardingStatus.COMPLETED 
+        ? "Onboarding marked as completed" 
+        : "Onboarding marked as in progress";
+      toast.success(message);
+      // Invalidate and refetch users data
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_error) {
+      toast.error("Failed to update onboarding status");
+    }
+  };
+      
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 p-0"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <MoreHorizontal className="h-4 w-4" />
+          <span className="sr-only">Open menu</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+        <DropdownMenuItem asChild>
+          <Link
+            href={`/admin/users/${user.id}?tab=documents`}
+            className="flex items-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <FileText className="h-4 w-4" />
+            <span>Documents</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link
+            href={`/admin/users/${user.id}?edit=true`}
+            className="flex items-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Edit className="h-4 w-4" />
+            <span>Edit</span>
+          </Link>
+        </DropdownMenuItem>
+        {user.onboardingStatus === OnboardingStatus.IN_PROGRESS ? (
+          <DropdownMenuItem
+            onClick={(e) => handleOnboardingStatusUpdate(e, OnboardingStatus.COMPLETED)}
+            className="flex items-center gap-2 text-green-600"
+          >
+            <CheckCircle className="h-4 w-4" />
+            <span>Mark as Complete</span>
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem
+            onClick={(e) => handleOnboardingStatusUpdate(e, OnboardingStatus.IN_PROGRESS)}
+            className="flex items-center gap-2 text-amber-600"
+          >
+            <CheckCircle className="h-4 w-4" />
+            <span>Mark as Incomplete</span>
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem
+          variant="destructive"
+          onClick={async (e) => {
+            e.stopPropagation();
+            try {
+              const response = await fetch(`/api/users/${user.id}`, {
+                method: 'DELETE',
+              });
+              
+              if (!response.ok) {
+                throw new Error('Failed to delete user');
+              }
+              
+              toast.success('User deleted successfully');
+              // Invalidate and refetch users data
+              queryClient.invalidateQueries({ queryKey: ['users'] });
+            } catch (error) {
+              console.error('Error deleting user:', error);
+              toast.error('Failed to delete user');
+            }
+          }}
+          className="flex items-center gap-2 text-destructive"
+        >
+          <Trash className="h-4 w-4" />
+          <span>Delete</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}

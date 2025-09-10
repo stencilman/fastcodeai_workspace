@@ -35,7 +35,7 @@ export function CommunicationTab() {
         </p>
         <p className="mb-6">
           Effective communication with our coworkers is not just a
-          professional necessity; it's a matter of good manners, akin to
+          professional necessity; it&apos;s a matter of good manners, akin to
           keeping our house clean. Ghosting, late messaging, and the
           failure to share information in a timely manner can create
           anxiety, frustration, and a loss of productivity as team members
@@ -55,7 +55,7 @@ export function CommunicationTab() {
               Information Generation:
             </strong>{" "}
             This is the creation of relevant, accurate, and timely
-            information. Whether it's a project update, a technical
+            information. Whether it&apos;s a project update, a technical
             document, or a simple vacation date or unavailability, the
             quality of the information we generate is fundamental to our
             effectiveness.
@@ -84,8 +84,8 @@ export function CommunicationTab() {
           Addressing Information Overload: A Good Problem to Have
         </h2>
         <p className="mb-6">
-          While we strive for effective communication, there's a potential
-          challenge of information overload. However, it's important to
+          While we strive for effective communication, there&apos;s a potential
+          challenge of information overload. However, it&apos;s important to
           recognize that having abundant information is a positive sign of
           a vibrant, active organization. We are far from reaching a point
           where information becomes unmanageable. Instead, our focus
@@ -126,7 +126,7 @@ export function CommunicationTab() {
         </ul>
 
         <h2 className="text-xl font-semibold mt-8 mb-4">
-          Enough Talks, Let's focus on action
+          Enough Talks, Let&apos;s focus on action
         </h2>
         <h3 className="text-lg font-medium mt-6 mb-3">
           Enhanced Communication Protocols
@@ -146,7 +146,7 @@ export function CommunicationTab() {
           </li>
           <li className="pl-2">
             ⏭️ for Next (Action after the current task, Focussed now, but
-            you're next)
+            you&apos;re next)
           </li>
           <li className="pl-2">🌙 for EOD (End of the Day)</li>
           <li className="pl-2">📅 for EOW (End of the Week)</li>
@@ -165,7 +165,7 @@ export function CommunicationTab() {
           Timely Updates and Information Sharing
         </h3>
         <p className="mb-3">
-          Encouraging a 'push' approach for both personal and public
+          Encouraging a &apos;push&apos; approach for both personal and public
           updates to prevent delays and keep everyone informed. Updates,
           delays and incidents are not good or bad, they are facts. They
           need to enter the system asap.
@@ -290,7 +290,7 @@ export function CommunicationTab() {
               Publish Meeting Notes:
             </strong>{" "}
             Share meeting notes on a shared document or relevant Slack
-            channel. This practice keeps those who couldn't attend
+            channel. This practice keeps those who couldn&apos;t attend
             informed and allows for continued asynchronous discussions.
           </li>
           <li className="pl-2">
@@ -308,7 +308,7 @@ export function CommunicationTab() {
               Avoid broadcast messages:
             </strong>{" "}
             Avoid using @here or @channel (broadcast markers) on Slack
-            Channels for non-broadcast communications, people who don't
+            Channels for non-broadcast communications, people who don&apos;t
             need to see the message at that moment should not lose focus
             with red bold notifications from Slack.
           </li>
@@ -341,8 +341,8 @@ export function CommunicationTab() {
         <ul className="list-disc pl-6 space-y-2 mb-6">
           <li className="pl-2">
             In small meetings, keep the camera on for engagement; in large
-            meetings (10 or more people), it's optional, especially if
-            you're not speaking.
+            meetings (10 or more people), it&apos;s optional, especially if
+            you&apos;re not speaking.
           </li>
           <li className="pl-2">
             Ensure good lighting, a professional background, and
@@ -356,7 +356,7 @@ export function CommunicationTab() {
             exit discreetly.
           </li>
           <li className="pl-2">
-            Be aware of your frame's content and respect others' choices
+            Be aware of your frame&apos;s content and respect others&apos; choices
             regarding camera use.
           </li>
         </ul>

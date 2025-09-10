@@ -5,10 +5,9 @@ import { OnboardingStatus } from '@/models/user';
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  // Extract id from params to fix Next.js 14 dynamic route params issue
-  const { id } = params;
+  const { id } = await params;
   
   try {
     const session = await auth();
@@ -32,7 +31,7 @@ export async function PATCH(
         id: id,
       },
       data: {
-        onboardingStatus: onboardingStatus as any, // Type assertion needed until Prisma types are regenerated
+        onboardingStatus: onboardingStatus as OnboardingStatus, // Type assertion to match Prisma schema
       },
     });
 

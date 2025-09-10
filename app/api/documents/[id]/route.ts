@@ -8,11 +8,10 @@ const s3Service = new S3Service();
 
 // Get a specific document
 export async function GET(
-    req: NextRequest,
-    { params }: { params: { id: string } }
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    // Await params to fix Next.js 14 dynamic route params issue
-    const { id } = params;
+    const { id } = await params;
     
     const session = await auth();
     if (!session?.user?.email) {
@@ -48,11 +47,10 @@ export async function GET(
 
 // Delete a document
 export async function DELETE(
-    req: NextRequest,
-    { params }: { params: { id: string } }
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    // Await params to fix Next.js 14 dynamic route params issue
-    const { id } = params;
+    const { id } = await params;
     
     const session = await auth();
     if (!session?.user?.email) {

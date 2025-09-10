@@ -4,10 +4,10 @@ import { UpdateUserInput } from "@/models/user";
 
 export async function GET(
     _request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
-        const { id } = params;
         const user = await getUserById(id);
 
         if (!user) {
@@ -29,10 +29,10 @@ export async function GET(
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
-        const { id } = params;
         const body = await request.json();
 
         // Check if user exists
@@ -78,10 +78,10 @@ export async function PUT(
 
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
-        const { id } = params;
         const body = await request.json();
 
         // Check if user exists
@@ -128,10 +128,10 @@ export async function PATCH(
 
 export async function DELETE(
     _request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
-        const { id } = params;
 
         // Check if user exists
         const existingUser = await getUserById(id);

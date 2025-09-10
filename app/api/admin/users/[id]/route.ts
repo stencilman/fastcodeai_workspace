@@ -5,9 +5,10 @@ import { auth } from "@/auth";
 
 // GET endpoint to fetch user details (admin only)
 export async function GET(
-    _request: NextRequest,
-    context: { params: { id: string } }
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
         // Check if the current user is an admin
         const session = await auth();
@@ -18,9 +19,6 @@ export async function GET(
             );
         }
 
-        // Properly await and extract the id parameter
-        const params = await context.params;
-        const id = params.id;
         const user = await getUserById(id);
 
         if (!user) {
@@ -43,21 +41,15 @@ export async function GET(
 // PATCH endpoint to update user details (admin only)
 export async function PATCH(
     request: NextRequest,
-    context: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
         // Check if the current user is an admin
         const session = await auth();
         if (!session || session.user.role !== "ADMIN") {
-            return NextResponse.json(
-                { error: "Unauthorized" },
-                { status: 401 }
-            );
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-
-        // Properly await and extract the id parameter
-        const params = await context.params;
-        const id = params.id;
         const body = await request.json();
 
         // Check if user exists
