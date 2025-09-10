@@ -287,7 +287,7 @@ export function DocumentCard({
             </div>
             {document?.notes && (
               <div className="text-xs mt-1 italic truncate text-red-600">
-                {document.notes}
+                Reason: {document.notes}
               </div>
             )}
           </div>
