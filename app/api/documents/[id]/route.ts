@@ -11,13 +11,16 @@ export async function GET(
     req: NextRequest,
     { params }: { params: { id: string } }
 ) {
+    // Await params to fix Next.js 14 dynamic route params issue
+    const { id } = params;
+    
     const session = await auth();
     if (!session?.user?.email) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     try {
-        const document = await getDocumentById(params.id);
+        const document = await getDocumentById(id);
 
         if (!document) {
             return NextResponse.json({ error: 'Document not found' }, { status: 404 });
@@ -48,13 +51,16 @@ export async function DELETE(
     req: NextRequest,
     { params }: { params: { id: string } }
 ) {
+    // Await params to fix Next.js 14 dynamic route params issue
+    const { id } = params;
+    
     const session = await auth();
     if (!session?.user?.email) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     try {
-        const document = await getDocumentById(params.id);
+        const document = await getDocumentById(id);
 
         if (!document) {
             return NextResponse.json({ error: 'Document not found' }, { status: 404 });
@@ -71,7 +77,7 @@ export async function DELETE(
         await s3Service.deleteFile(document.s3Key);
 
         // Delete document from database using data layer
-        await deleteDocument(params.id);
+        await deleteDocument(id);
 
         return NextResponse.json({ success: true });
     } catch (error) {

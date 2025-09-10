@@ -15,8 +15,7 @@ function calculateProfileCompletion(user: any): number {
         'address',
         'slackUserId',
         'linkedinProfile',
-        'bloodGroup',
-        'image'
+        'bloodGroup'
     ];
 
     // Count filled fields

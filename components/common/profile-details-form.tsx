@@ -54,7 +54,7 @@ const formSchema = z.object({
       message: "URL must be a LinkedIn profile.",
     }),
   bloodGroup: z.string().optional(),
-  slackUserId: z.string().optional().or(z.literal("")),
+  slackUserId: z.string().min(1, { message: "Slack User ID is required." }),
 });
 
 type FormValues = z.infer<typeof formSchema>;

@@ -50,7 +50,11 @@ export default auth((req) => {
   // Redirect logged-in users from auth routes to the appropriate page
   if (isAuthRoute) {
     if (isLoggedIn) {
-      if (role === UserRole.ADMIN || adminEmails) {
+      // First check the role from the session, then fallback to email check
+      if (role === UserRole.ADMIN) {
+        return Response.redirect(new URL(DEFAULT_ADMIN_REDIRECT, nextUrl));
+      } else if (adminEmails) {
+        // If role is not yet updated in session but email is in admin list
         return Response.redirect(new URL(DEFAULT_ADMIN_REDIRECT, nextUrl));
       }
       return Response.redirect(new URL(DEFAULT_USER_REDIRECT, nextUrl));
@@ -66,12 +70,12 @@ export default auth((req) => {
   // Role-based access control
   if (isLoggedIn) {
     // Admins trying to access user routes
-    if (role === UserRole.ADMIN && isUserRoute) {
+    if ((role === UserRole.ADMIN || adminEmails) && isUserRoute) {
       return Response.redirect(new URL(DEFAULT_ADMIN_REDIRECT, nextUrl));
     }
 
     // Users trying to access admin routes
-    if (role === UserRole.USER && isAdminRoute) {
+    if (role === UserRole.USER && !adminEmails && isAdminRoute) {
       return Response.redirect(new URL(DEFAULT_USER_REDIRECT, nextUrl));
     }
   }

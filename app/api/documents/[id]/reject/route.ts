@@ -19,7 +19,7 @@ export async function POST(
             });
         }
 
-        const updatedDocument = updateDocumentStatus(
+        const updatedDocument = await updateDocumentStatus(
             id,
             DocumentStatus.REJECTED,
             reviewerId,

@@ -7,6 +7,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Extract id from params to fix Next.js 14 dynamic route params issue
+  const { id } = params;
+  
   try {
     const session = await auth();
     
@@ -26,7 +29,7 @@ export async function PATCH(
     // Using Prisma.validator to ensure type safety
     const updatedUser = await db.user.update({
       where: {
-        id: params.id,
+        id: id,
       },
       data: {
         onboardingStatus: onboardingStatus as any, // Type assertion needed until Prisma types are regenerated

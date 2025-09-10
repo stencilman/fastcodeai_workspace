@@ -8,6 +8,9 @@ export async function POST(
     req: NextRequest,
     { params }: { params: { id: string } }
 ) {
+    // Extract id from params to fix Next.js 14 dynamic route params issue
+    const { id } = params;
+    
     const session = await auth();
     if (!session?.user?.email) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -32,7 +35,7 @@ export async function POST(
 
         // Update document using data layer
         const document = await updateDocumentStatus(
-            params.id,
+            id,
             status as DocumentStatus,
             admin.id,
             notes

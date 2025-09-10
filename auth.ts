@@ -92,10 +92,13 @@ export const {
 
       return session;
     },
-    async jwt({ token, user }) {
-      // Persist user.role in the JWT on initial sign-in; avoid DB calls in Edge runtime
-      if (user && (user as any).role) {
-        token.role = (user as any).role;
+    async jwt({ token }) {
+      // Always fetch the latest user data from the database to ensure role changes are reflected
+      if (token.sub) {
+        const dbUser = await getUserById(token.sub);
+        if (dbUser) {
+          token.role = dbUser.role;
+        }
       }
       return token;
     },
