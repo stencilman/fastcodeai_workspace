@@ -1,2 +1,3 @@
+export const runtime = "nodejs";
 
-export { GET, POST } from "@/auth"
+export { GET, POST } from "@/auth";

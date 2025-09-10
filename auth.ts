@@ -93,11 +93,11 @@ export const {
       return session;
     },
     async jwt({ token }) {
-      // Always fetch the latest user data from the database to ensure role changes are reflected
-      if (token.sub) {
-        const dbUser = await getUserById(token.sub);
-        if (dbUser) {
-          token.role = dbUser.role;
+      // Avoid Prisma call when running in Edge runtime (e.g. during middleware)
+      if (token.sub && !token.role) {
+        if (process.env.NEXT_RUNTIME !== "edge" && !(globalThis as any).EdgeRuntime) {
+          const dbUser = await getUserById(token.sub).catch(() => null);
+          if (dbUser) token.role = dbUser.role;
         }
       }
       return token;
