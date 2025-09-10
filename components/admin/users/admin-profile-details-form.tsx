@@ -47,7 +47,7 @@ const formSchema = z.object({
     ),
   bloodGroup: z.string().optional(),
   role: z.string(),
-  slackUserId: z.string().optional().or(z.literal("")),
+  slackUserId: z.string().min(1, { message: "Slack ID is required." }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -216,10 +216,12 @@ export function AdminProfileDetailsForm({
           />
           
           {/* Email - Read-only field */}
-          <div>
+          <FormItem>
             <FormLabel>Email</FormLabel>
-            <Input value={userData.email || ""} disabled />
-          </div>
+            <FormControl>
+              <Input value={userData.email || ""} disabled />
+            </FormControl>
+          </FormItem>
           
           {/* Phone Number */}
           <FormField
