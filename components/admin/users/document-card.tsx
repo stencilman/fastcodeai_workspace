@@ -26,11 +26,25 @@ interface Document {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loading } from "@/components/ui/loading";
-import { Check, X, FileText, ExternalLink, Eye, MoreVertical } from "lucide-react";
+import {
+  Check,
+  X,
+  FileText,
+  ExternalLink,
+  Eye,
+  MoreVertical,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,6 +82,17 @@ export function DocumentCard({
   const [rejectionDialogOpen, setRejectionDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [rejectionReasonError, setRejectionReasonError] = useState(false);
+
+  // Common rejection reasons
+  const commonRejectionReasons = [
+    "Document is blurry or unclear",
+    "Document is expired",
+    "Document is incomplete or cut off",
+    "Wrong document type uploaded",
+    "Document quality is too low",
+    "Document is not readable",
+    "Missing required information",
+  ];
 
   useEffect(() => {
     setLocalDocumentStatus(document.status);
@@ -290,131 +315,140 @@ export function DocumentCard({
     setRejectionReasonError(false);
   };
 
+  const handleCommonReasonClick = (reason: string) => {
+    setRejectionReason(reason);
+    setRejectionReasonError(false);
+  };
+
   const isApproving = isProcessing && processingAction === "approve";
   const isRejecting = isProcessing && processingAction === "reject";
 
   return (
     <Card className="overflow-hidden">
-      <div className="p-4 flex flex-col md:flex-row md:items-center gap-4">
-        <div
-          className="bg-slate-100 p-3 rounded-md flex items-center justify-center cursor-pointer hover:bg-slate-200 transition-colors flex-shrink-0 relative group"
-          onClick={openDialog}
-        >
-          {getDocumentIcon()}
-          <div className="absolute inset-0 bg-black/50 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <Eye className="h-6 w-6 text-white" />
+      <div className="p-4 flex flex-row items-center gap-4 ">
+        <div className="flex flex-col md:flex-row items-center gap-4 w-full">
+          <div
+            className="bg-slate-100 p-3 rounded-md flex items-center justify-center cursor-pointer hover:bg-slate-200 transition-colors flex-shrink-0 relative group"
+            onClick={openDialog}
+          >
+            {getDocumentIcon()}
+            <div className="absolute inset-0 bg-black/50 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Eye className="h-6 w-6 text-white" />
+            </div>
           </div>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            {getTypeBadge()}
-            {getStatusBadge()}
-          </div>
-          <div className="text-sm font-medium truncate">{documentName}</div>
-          <div className="flex flex-wrap items-center gap-x-4 text-xs text-muted-foreground mt-1">
-            <span>Uploaded: {formatDate(document.uploadedAt)}</span>
-            {document.reviewedAt && (
-              <span>Reviewed: {formatDate(document.reviewedAt)}</span>
-            )}
-            {showSubmitter && document.user && (
-              <span className="flex items-center gap-1">
-                Submitted by:{" "}
-                <Link
-                  href={`/admin/users/${document.user.id}`}
-                  className="text-primary font-medium hover:underline"
-                >
-                  {document.user.name}
-                </Link>
-              </span>
-            )}
-          </div>
-          {document.notes &&
-            localDocumentStatus === DocumentStatus.REJECTED && (
-              <div className="text-xs mt-1 italic truncate text-red-600">
-                Reason: {document.notes}
+          <div className="flex w-full">
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                {getTypeBadge()}
+                {getStatusBadge()}
               </div>
-            )}
-        </div>
-        <div className="hidden md:flex gap-2 ml-auto">
-          {isPending ? (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-                onClick={handleReject}
-                disabled={isProcessing}
-              >
-                {isRejecting ? (
-                  <Loading
+              <div className="text-sm font-medium truncate text-wrap">{documentName}</div>
+              <div className="flex flex-wrap items-center gap-x-4 text-xs text-muted-foreground mt-1">
+                <span>Uploaded: {formatDate(document.uploadedAt)}</span>
+                {document.reviewedAt && (
+                  <span>Reviewed: {formatDate(document.reviewedAt)}</span>
+                )}
+                {showSubmitter && document.user && (
+                  <span className="flex items-center gap-1">
+                    Submitted by:{" "}
+                    <Link
+                      href={`/admin/users/${document.user.id}`}
+                      className="text-primary font-medium hover:underline"
+                    >
+                      {document.user.name}
+                    </Link>
+                  </span>
+                )}
+              </div>
+              {document.notes &&
+                localDocumentStatus === DocumentStatus.REJECTED && (
+                  <div className="text-xs mt-1 italic truncate text-red-600">
+                    Reason: {document.notes}
+                  </div>
+                )}
+            </div>
+            <div className=" md:flex gap-2 ml-auto">
+              {isPending ? (
+                <>
+                  <Button
                     size="sm"
-                    variant="danger"
-                    text="Rejecting..."
-                    textClassName="text-red-600"
-                  />
-                ) : (
-                  <>
-                    <X className="h-4 w-4 mr-1" /> Reject
-                  </>
-                )}
-              </Button>
-              <Button
-                size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={handleApprove}
-                disabled={isProcessing}
-              >
-                {isApproving ? (
-                  <Loading
-                    size="sm"
-                    variant="white"
-                    text="Approving..."
-                    textClassName="text-white"
-                  />
-                ) : (
-                  <>
-                    <Check className="h-4 w-4 mr-1" /> Approve
-                  </>
-                )}
-              </Button>
-            </>
-          ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" disabled={isProcessing}>
-                  {isProcessing ? (
-                    <Loading size="sm" variant="primary" />
-                  ) : (
-                    <MoreVertical className="h-4 w-4" />
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {localDocumentStatus !== DocumentStatus.APPROVED && (
-                  <DropdownMenuItem
-                    onClick={handleApprove}
-                    disabled={isProcessing}
-                    className="text-green-600 focus:text-green-700 focus:bg-green-50"
-                  >
-                    <Check className="h-4 w-4 mr-2" /> Approve Document
-                  </DropdownMenuItem>
-                )}
-                {localDocumentStatus !== DocumentStatus.REJECTED && (
-                  <DropdownMenuItem
+                    variant="outline"
+                    className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
                     onClick={handleReject}
                     disabled={isProcessing}
-                    className="text-red-600 focus:text-red-700 focus:bg-red-50"
                   >
-                    <X className="h-4 w-4 mr-2" /> Reject Document
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+                    {isRejecting ? (
+                      <Loading
+                        size="sm"
+                        variant="danger"
+                        text="Rejecting..."
+                        textClassName="text-red-600"
+                      />
+                    ) : (
+                      <>
+                        <X className="h-4 w-4 mr-1" /> Reject
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={handleApprove}
+                    disabled={isProcessing}
+                  >
+                    {isApproving ? (
+                      <Loading
+                        size="sm"
+                        variant="white"
+                        text="Approving..."
+                        textClassName="text-white"
+                      />
+                    ) : (
+                      <>
+                        <Check className="h-4 w-4 mr-1" /> Approve
+                      </>
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" disabled={isProcessing}>
+                      {isProcessing ? (
+                        <Loading size="sm" variant="primary" />
+                      ) : (
+                        <MoreVertical className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {localDocumentStatus !== DocumentStatus.APPROVED && (
+                      <DropdownMenuItem
+                        onClick={handleApprove}
+                        disabled={isProcessing}
+                        className="text-green-600 focus:text-green-700 focus:bg-green-50"
+                      >
+                        <Check className="h-4 w-4 mr-2" /> Approve Document
+                      </DropdownMenuItem>
+                    )}
+                    {localDocumentStatus !== DocumentStatus.REJECTED && (
+                      <DropdownMenuItem
+                        onClick={handleReject}
+                        disabled={isProcessing}
+                        className="text-red-600 focus:text-red-700 focus:bg-red-50"
+                      >
+                        <X className="h-4 w-4 mr-2" /> Reject Document
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="md:hidden px-4 pb-4 pt-0">
+      {/* <div className="md:hidden px-4 pb-4 pt-0">
         {isPending ? (
           <div className="grid grid-cols-2 gap-2">
             <Button
@@ -495,7 +529,7 @@ export function DocumentCard({
             </DropdownMenu>
           </div>
         )}
-      </div>
+      </div> */}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden w-[95vw] max-w-full">
@@ -608,6 +642,26 @@ export function DocumentCard({
                 >
                   Rejection Reason <span className="text-red-500">*</span>
                 </Label>
+
+                {/* Common rejection reasons */}
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    Common reasons:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {commonRejectionReasons.map((reason, index) => (
+                      <Badge
+                        key={index}
+                        variant="outline"
+                        className="cursor-pointer hover:bg-gray-100 text-xs px-2 py-1"
+                        onClick={() => handleCommonReasonClick(reason)}
+                      >
+                        {reason}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
                 <Textarea
                   id="rejection-reason"
                   placeholder="Enter the reason for rejection..."
