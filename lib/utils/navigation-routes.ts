@@ -59,6 +59,11 @@ export const userRoutes: Route[] = [
         icon: FileText,
     },
     {
+        label: "Holidays",
+        href: "/user/holidays",
+        icon: FileText,
+    },
+    {
         label: "Expense Tracker",
         href: "https://expense.fastcode.ai/auth/login",
         icon: IndianRupee,
