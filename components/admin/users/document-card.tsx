@@ -399,7 +399,7 @@ export function DocumentCard({
               </div>
               {document.notes &&
                 localDocumentStatus === DocumentStatus.REJECTED && (
-                  <div className="text-xs mt-1 italic truncate text-red-600">
+                  <div className="text-xs mt-1 italic  text-red-600">
                     Reason: {document.notes}
                   </div>
                 )}
