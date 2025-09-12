@@ -300,7 +300,7 @@ export function DocumentCard({
           <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden w-[95vw] max-w-full">
             <DialogHeader>
               <DialogTitle className="pr-8">
-                <span className="truncate">{documentName}</span>
+                <span className="break-words">{documentName}</span>
                 {/* 'Open in new tab' button moved to DialogFooter for mobile */}
                 <div className="hidden sm:block mt-2 sm:mt-0">
                   {documentUrl && (

@@ -336,13 +336,17 @@ export function DocumentCard({
               <Eye className="h-6 w-6 text-white" />
             </div>
           </div>
-          <div className="flex w-full">
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
+          <div className="flex flex-col w-full">
+            <div className="flex justify-between items-start w-full mb-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {getTypeBadge()}
                 {getStatusBadge()}
               </div>
-              <div className="text-sm font-medium truncate text-wrap">{documentName}</div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium truncate text-wrap">
+                {documentName}
+              </div>
               <div className="flex flex-wrap items-center gap-x-4 text-xs text-muted-foreground mt-1">
                 <span>Uploaded: {formatDate(document.uploadedAt)}</span>
                 {document.reviewedAt && (
@@ -367,13 +371,13 @@ export function DocumentCard({
                   </div>
                 )}
             </div>
-            <div className=" md:flex gap-2 ml-auto">
+            <div className="flex gap-2 ml-auto mt-2">
               {isPending ? (
                 <>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                    className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 text-xs sm:text-sm"
                     onClick={handleReject}
                     disabled={isProcessing}
                   >
@@ -386,13 +390,13 @@ export function DocumentCard({
                       />
                     ) : (
                       <>
-                        <X className="h-4 w-4 mr-1" /> Reject
+                        <X className="h-3 w-3 sm:h-4 sm:w-4 mr-1" /> Reject
                       </>
                     )}
                   </Button>
                   <Button
                     size="sm"
-                    className="bg-green-600 hover:bg-green-700 text-white"
+                    className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm"
                     onClick={handleApprove}
                     disabled={isProcessing}
                   >
@@ -405,7 +409,7 @@ export function DocumentCard({
                       />
                     ) : (
                       <>
-                        <Check className="h-4 w-4 mr-1" /> Approve
+                        <Check className="h-3 w-3 sm:h-4 sm:w-4 mr-1" /> Approve
                       </>
                     )}
                   </Button>
@@ -532,10 +536,10 @@ export function DocumentCard({
       </div> */}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden w-[95vw] max-w-full">
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] max-w-full">
           <DialogHeader>
             <DialogTitle className="pr-8">
-              <span className="truncate">{documentName}</span>
+              <span className="break-words">{documentName}</span>
               {/* 'Open in new tab' button moved to DialogFooter for mobile */}
               <div className="hidden sm:block mt-2 sm:mt-0">
                 {documentUrl && (

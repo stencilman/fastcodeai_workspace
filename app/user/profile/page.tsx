@@ -75,7 +75,9 @@ export default function ProfilePage() {
             <CardTitle className="text-lg font-medium">
               {userData.name}
             </CardTitle>
-            <p className="text-sm text-muted-foreground">{userData.email}</p>
+            <p className="text-sm text-muted-foreground break-all">
+              {userData.email}
+            </p>
           </div>
         </CardHeader>
         <CardContent>

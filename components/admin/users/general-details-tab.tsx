@@ -124,15 +124,18 @@ export function GeneralDetailsTab() {
   return (
     <TabsContent value="general">
       <Card>
-        <CardHeader className="pb-3 flex flex-row justify-between items-center">
-          <div className="space-y-1">
+        <CardHeader className="pb-3 flex flex-row justify-between items-start">
+          <div className="space-y-1 max-w-[75%]"> {/* Limit width to prevent overflow */}
             <CardTitle className="text-lg font-medium">{user?.name}</CardTitle>
-            <p className="text-sm text-muted-foreground">{user?.email}</p>
+            <p className="text-sm text-muted-foreground break-all" style={{ wordBreak: 'break-word' }}>
+              {user?.email}
+            </p>
           </div>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setIsEditing(!isEditing)}
+            className="shrink-0 ml-2"
           >
             {isEditing ? (
               "Cancel"
@@ -160,7 +163,7 @@ export function GeneralDetailsTab() {
                   <h3 className="text-md font-medium mb-3">
                     Onboarding Status
                   </h3>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <Badge
                         variant={
@@ -179,10 +182,10 @@ export function GeneralDetailsTab() {
                         <Check className="h-4 w-4 text-green-500" />
                       )}
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <Label
                         htmlFor="onboarding-completed"
-                        className="cursor-pointer text-sm font-medium"
+                        className="cursor-pointer text-sm font-medium whitespace-nowrap"
                       >
                         Mark as Completed
                       </Label>
@@ -199,7 +202,7 @@ export function GeneralDetailsTab() {
                           );
                         }}
                         disabled={updateOnboardingStatusMutation.isPending}
-                        className="scale-110"
+                        className="flex-shrink-0"
                       />
                     </div>
                   </div>
@@ -217,7 +220,9 @@ export function GeneralDetailsTab() {
                     <h3 className="text-sm font-medium text-muted-foreground">
                       Email
                     </h3>
-                    <p>{user?.email}</p>
+                    <p className="break-all" style={{ wordBreak: 'break-word' }}>
+                      {user?.email}
+                    </p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground">
