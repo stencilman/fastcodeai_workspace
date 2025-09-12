@@ -342,6 +342,39 @@ export function DocumentCard({
                 {getTypeBadge()}
                 {getStatusBadge()}
               </div>
+              {!isPending && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" disabled={isProcessing} className="h-8 w-8 -mt-1">
+                      {isProcessing ? (
+                        <Loading size="sm" variant="primary" />
+                      ) : (
+                        <MoreVertical className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {localDocumentStatus !== DocumentStatus.APPROVED && (
+                      <DropdownMenuItem
+                        onClick={handleApprove}
+                        disabled={isProcessing}
+                        className="text-green-600 focus:text-green-700 focus:bg-green-50"
+                      >
+                        <Check className="h-4 w-4 mr-2" /> Approve Document
+                      </DropdownMenuItem>
+                    )}
+                    {localDocumentStatus !== DocumentStatus.REJECTED && (
+                      <DropdownMenuItem
+                        onClick={handleReject}
+                        disabled={isProcessing}
+                        className="text-red-600 focus:text-red-700 focus:bg-red-50"
+                      >
+                        <X className="h-4 w-4 mr-2" /> Reject Document
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium truncate text-wrap">
@@ -372,7 +405,7 @@ export function DocumentCard({
                 )}
             </div>
             <div className="flex gap-2 ml-auto mt-2">
-              {isPending ? (
+              {isPending && (
                 <>
                   <Button
                     size="sm"
@@ -414,38 +447,6 @@ export function DocumentCard({
                     )}
                   </Button>
                 </>
-              ) : (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" disabled={isProcessing}>
-                      {isProcessing ? (
-                        <Loading size="sm" variant="primary" />
-                      ) : (
-                        <MoreVertical className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {localDocumentStatus !== DocumentStatus.APPROVED && (
-                      <DropdownMenuItem
-                        onClick={handleApprove}
-                        disabled={isProcessing}
-                        className="text-green-600 focus:text-green-700 focus:bg-green-50"
-                      >
-                        <Check className="h-4 w-4 mr-2" /> Approve Document
-                      </DropdownMenuItem>
-                    )}
-                    {localDocumentStatus !== DocumentStatus.REJECTED && (
-                      <DropdownMenuItem
-                        onClick={handleReject}
-                        disabled={isProcessing}
-                        className="text-red-600 focus:text-red-700 focus:bg-red-50"
-                      >
-                        <X className="h-4 w-4 mr-2" /> Reject Document
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
               )}
             </div>
           </div>
