@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
   Card,
@@ -121,6 +122,7 @@ const fetchDashboardData = async (): Promise<AdminDashboardData> => {
 
 export default function AdminDashboardPage() {
   const { status } = useSession();
+  const router = useRouter();
 
   // Use React Query for data fetching with caching
   const {
@@ -403,19 +405,25 @@ export default function AdminDashboardPage() {
                     <div className="bg-primary/10 p-2 rounded-full">
                       <FileText className="h-4 w-4 text-primary" />
                     </div>
-                    <div className="flex-1 space-y-1">
+                    <div 
+                      className="flex-1 space-y-1 group hover:bg-muted/50 rounded-md p-1 transition-colors cursor-pointer"
+                      onClick={() => router.push(`/admin/users/${activity.userId}?tab=documents`)}
+                    >
                       <div className="flex items-center justify-between">
                         <p className="font-medium">{activity.formattedType}</p>
                         <StatusBadge status={activity.status} />
                       </div>
                       <p className="text-sm">
                         By{" "}
-                        <Link
-                          href={`/admin/users/${activity.userId}`}
-                          className="font-medium hover:underline text-primary break-words"
+                        <span 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/admin/users/${activity.userId}`);
+                          }}
+                          className="font-medium hover:underline text-primary break-words inline-block"
                         >
                           {activity.user.name}
-                        </Link>
+                        </span>
                       </p>
                       <p className="text-sm text-muted-foreground break-words">
                         {activity.fileName}
@@ -486,7 +494,7 @@ export default function AdminDashboardPage() {
                             : "In Progress"}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground break-words">
+                      <p className="text-sm text-muted-foreground break-all">
                         {user.email}
                       </p>
                       <p className="text-xs text-muted-foreground">

@@ -60,8 +60,11 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-4">
       <Toaster position="top-right" richColors />
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold">User Management</h1>
+      <div>
+        <h1 className="text-2xl font-semibold mb-6">User Management</h1>
+      </div>
+      
+      <div className="flex justify-end mb-2">
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Show</span>
           <Select

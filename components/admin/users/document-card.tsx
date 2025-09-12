@@ -345,7 +345,12 @@ export function DocumentCard({
               {!isPending && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" disabled={isProcessing} className="h-8 w-8 -mt-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      disabled={isProcessing}
+                      className="h-8 w-8 -mt-1"
+                    >
                       {isProcessing ? (
                         <Loading size="sm" variant="primary" />
                       ) : (
@@ -667,23 +672,25 @@ export function DocumentCard({
                   </div>
                 </div>
 
-                <Textarea
-                  id="rejection-reason"
-                  placeholder="Enter the reason for rejection..."
-                  value={rejectionReason}
-                  onChange={(e) => {
-                    setRejectionReason(e.target.value);
-                    if (e.target.value.trim()) {
-                      setRejectionReasonError(false);
-                    }
-                  }}
-                  className={cn(
-                    "resize-none min-h-[100px]",
-                    rejectionReasonError
-                      ? "border-red-500 focus-visible:ring-red-500"
-                      : ""
-                  )}
-                />
+                <div className="relative w-full">
+                  <textarea
+                    id="rejection-reason"
+                    placeholder="Enter the reason for rejection..."
+                    value={rejectionReason}
+                    onChange={(e) => {
+                      setRejectionReason(e.target.value);
+                      if (e.target.value.trim()) {
+                        setRejectionReasonError(false);
+                      }
+                    }}
+                    className={cn(
+                      "w-full min-h-[100px] max-h-[200px] overflow-y-auto p-3 rounded-md border resize-none break-words",
+                      rejectionReasonError
+                        ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                        : "border-input focus:ring-ring focus:border-input"
+                    )}
+                  />
+                </div>
                 {rejectionReasonError && (
                   <p className="text-sm text-red-500">
                     Rejection reason is required

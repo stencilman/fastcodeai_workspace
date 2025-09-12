@@ -124,28 +124,23 @@ export function GeneralDetailsTab() {
   return (
     <TabsContent value="general">
       <Card>
-        <CardHeader className="pb-3 flex flex-row justify-between items-start">
-          <div className="space-y-1 max-w-[75%]"> {/* Limit width to prevent overflow */}
+        <CardHeader className="pb-3">
+          <div className="space-y-1 max-w-full"> {/* Limit width to prevent overflow */}
             <CardTitle className="text-lg font-medium">{user?.name}</CardTitle>
             <p className="text-sm text-muted-foreground break-all" style={{ wordBreak: 'break-word' }}>
               {user?.email}
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsEditing(!isEditing)}
-            className="shrink-0 ml-2"
-          >
-            {isEditing ? (
-              "Cancel"
-            ) : (
-              <>
-                <Pencil className="h-4 w-4 mr-2" />
-                Edit
-              </>
-            )}
-          </Button>
+          {isEditing && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditing(false)}
+              className="shrink-0 ml-2 mt-2"
+            >
+              Cancel
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -208,7 +203,18 @@ export function GeneralDetailsTab() {
                   </div>
                 </div>
 
-                <h3 className="text-lg font-medium">User Details</h3>
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-lg font-medium">User Details</h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditing(!isEditing)}
+                    className="shrink-0"
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground">
