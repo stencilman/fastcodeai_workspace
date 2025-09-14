@@ -43,8 +43,8 @@ export default function Navbar() {
     session?.user?.email?.includes("prabal@fastcode.ai") ||
     session?.user?.email?.includes("priyanka@fastcode.ai") ||
     session?.user?.email?.includes("arjun@fastcode.ai") ||
-    session?.user?.email?.includes("admin@fastcode.ai")||
-    session?.user?.email?.includes("abdul@fastcode.ai");
+    // session?.user?.email?.includes("abdul@fastcode.ai") ||
+    session?.user?.email?.includes("admin@fastcode.ai");
 
   const onSignOut = async () => {
     try {
@@ -98,7 +98,7 @@ export default function Navbar() {
           <div className="relative w-6 h-6">
             <Image src="/brain.svg" alt="FastCode Logo" width={24} height={24} />
           </div>
-          <span className="text-lg font-semibold">FastCode AI DayOne</span>
+          <span className="text-lg font-semibold">FastCode AI Day One</span>
         </Link>
       </div>
 

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Document, DocumentStatus } from "@/models/document";
 import { TabsContent } from "@/components/ui/tabs";
 import { DocumentCard } from "@/components/admin/users/document-card";
+import { OnboardingStatusSection } from "@/components/admin/users/onboarding-status-section";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -16,6 +17,18 @@ export function DocumentsTab() {
 
   const queryClient = useQueryClient();
 
+  // Fetch user data for onboarding status
+  const { data: user } = useQuery({
+    queryKey: ["user", userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/users/${userId}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch user");
+      }
+      return response.json();
+    },
+  });
+
   // Fetch documents for the user
   const {
     data: documentsData,
@@ -28,7 +41,8 @@ export function DocumentsTab() {
       if (!response.ok) {
         if (response.status === 404) {
           toast.error("User not found", {
-            description: "The requested user does not exist or has been deleted."
+            description:
+              "The requested user does not exist or has been deleted.",
           });
           router.push("/admin/users");
         }
@@ -177,6 +191,7 @@ export function DocumentsTab() {
   return (
     <TabsContent value="documents" className="p-4 border rounded-lg">
       <h2 className="text-xl font-medium mb-4">Documents</h2>
+      {user && <OnboardingStatusSection user={user} />}
       <div className="space-y-3">
         {isLoading ? (
           <div className="flex justify-center items-center py-8">

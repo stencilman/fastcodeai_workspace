@@ -3,7 +3,8 @@ import {
     Users,
     FileText,
     User,
-    IndianRupee
+    IndianRupee,
+    Calendar
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -61,7 +62,7 @@ export const userRoutes: Route[] = [
     {
         label: "Holidays",
         href: "/user/holidays",
-        icon: FileText,
+        icon: Calendar,
     },
     {
         label: "Expense Tracker",

@@ -61,7 +61,7 @@ export const CustomTourCard: React.FC<CardComponentProps> = ({
       <CardContent className="space-y-4">
         <p className="text-sm text-gray-700 leading-relaxed">{step.content}</p>
 
-        <div className="flex sm:items-center justify-between flex-col sm:flex-row gap-2">
+        <div className="flex  justify-between flex-col  gap-2">
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-gray-600">
               {currentStep + 1} of {totalSteps}

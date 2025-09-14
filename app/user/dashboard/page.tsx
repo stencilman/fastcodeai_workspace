@@ -529,7 +529,7 @@ export default function UserDashboardPage() {
           )}
         </div>
       </div>
-      <TourTestControls />
+      {/* <TourTestControls /> */}
     </div>
   );
 }

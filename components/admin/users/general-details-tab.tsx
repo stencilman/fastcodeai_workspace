@@ -10,11 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminProfileDetailsForm } from "@/components/admin/users/admin-profile-details-form";
 import { Button } from "@/components/ui/button";
 import { getDisplayBloodGroup } from "@/lib/utils/utils";
-import { OnboardingStatus } from "@/models/user";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { OnboardingStatusSection } from "@/components/admin/users/onboarding-status-section";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 
 export function GeneralDetailsTab() {
   const params = useParams();
@@ -23,35 +20,6 @@ export function GeneralDetailsTab() {
   const editParam = searchParams.get("edit");
   const [isEditing, setIsEditing] = useState(false);
   const queryClient = useQueryClient();
-
-  // Mutation for updating onboarding status
-  const updateOnboardingStatusMutation = useMutation({
-    mutationFn: async (status: OnboardingStatus) => {
-      const response = await fetch(
-        `/api/admin/users/${params.id}/onboarding-status`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ onboardingStatus: status }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to update onboarding status");
-      }
-
-      return await response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user", params.id] });
-      toast.success("Onboarding status updated successfully");
-    },
-    onError: (error) => {
-      toast.error(`Error updating onboarding status: ${error.message}`);
-    },
-  });
 
   // Check for edit parameter in URL and set edit mode accordingly
   useEffect(() => {
@@ -105,7 +73,7 @@ export function GeneralDetailsTab() {
       }
       // If we can't parse it, just return the URL
       return url;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_error) {
       return url;
     }
@@ -125,9 +93,14 @@ export function GeneralDetailsTab() {
     <TabsContent value="general">
       <Card>
         <CardHeader className="pb-3">
-          <div className="space-y-1 max-w-full"> {/* Limit width to prevent overflow */}
+          <div className="space-y-1 max-w-full">
+            {" "}
+            {/* Limit width to prevent overflow */}
             <CardTitle className="text-lg font-medium">{user?.name}</CardTitle>
-            <p className="text-sm text-muted-foreground break-all" style={{ wordBreak: 'break-word' }}>
+            <p
+              className="text-sm text-muted-foreground break-all"
+              style={{ wordBreak: "break-word" }}
+            >
               {user?.email}
             </p>
           </div>
@@ -154,54 +127,7 @@ export function GeneralDetailsTab() {
               </>
             ) : (
               <>
-                <div className="mb-6 p-4 border rounded-lg bg-muted/20">
-                  <h3 className="text-md font-medium mb-3">
-                    Onboarding Status
-                  </h3>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant={
-                          user?.onboardingStatus === OnboardingStatus.COMPLETED
-                            ? "default"
-                            : "secondary"
-                        }
-                        className="capitalize"
-                      >
-                        {user?.onboardingStatus
-                          ?.toLowerCase()
-                          .replace("_", " ") || "in progress"}
-                      </Badge>
-                      {user?.onboardingStatus ===
-                        OnboardingStatus.COMPLETED && (
-                        <Check className="h-4 w-4 text-green-500" />
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Label
-                        htmlFor="onboarding-completed"
-                        className="cursor-pointer text-sm font-medium whitespace-nowrap"
-                      >
-                        Mark as Completed
-                      </Label>
-                      <Switch
-                        id="onboarding-completed"
-                        checked={
-                          user?.onboardingStatus === OnboardingStatus.COMPLETED
-                        }
-                        onCheckedChange={(checked: boolean) => {
-                          updateOnboardingStatusMutation.mutate(
-                            checked
-                              ? OnboardingStatus.COMPLETED
-                              : OnboardingStatus.IN_PROGRESS
-                          );
-                        }}
-                        disabled={updateOnboardingStatusMutation.isPending}
-                        className="flex-shrink-0"
-                      />
-                    </div>
-                  </div>
-                </div>
+                <OnboardingStatusSection user={user} />
 
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="text-lg font-medium">User Details</h3>
@@ -226,7 +152,10 @@ export function GeneralDetailsTab() {
                     <h3 className="text-sm font-medium text-muted-foreground">
                       Email
                     </h3>
-                    <p className="break-all" style={{ wordBreak: 'break-word' }}>
+                    <p
+                      className="break-all"
+                      style={{ wordBreak: "break-word" }}
+                    >
                       {user?.email}
                     </p>
                   </div>
