@@ -215,7 +215,7 @@ export default function AdminDashboardPage() {
         <Button asChild>
           <Link
             href={
-              status === "unauthenticated" ? "/auth/signin" : "/admin/dashboard"
+              status === "unauthenticated" ? "/auth/login" : "/admin/dashboard"
             }
           >
             {status === "unauthenticated" ? "Sign In" : "Try Again"}

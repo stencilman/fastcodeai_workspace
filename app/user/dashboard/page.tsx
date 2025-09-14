@@ -209,7 +209,7 @@ export default function UserDashboardPage() {
         <Button asChild>
           <Link
             href={
-              status === "unauthenticated" ? "/auth/signin" : "/user/dashboard"
+              status === "unauthenticated" ? "/auth/login" : "/user/dashboard"
             }
           >
             {status === "unauthenticated" ? "Sign In" : "Try Again"}

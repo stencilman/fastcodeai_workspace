@@ -23,7 +23,7 @@ export default function ProfilePage() {
   const { data: session, status } = useSession({
     required: true,
     onUnauthenticated() {
-      redirect("/auth/signin?callbackUrl=/user/profile");
+      redirect("/auth/login?callbackUrl=/user/profile");
     },
   });
 

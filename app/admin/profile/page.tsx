@@ -23,7 +23,7 @@ export default function AdminProfilePage() {
   const { data: session, status } = useSession({
     required: true,
     onUnauthenticated() {
-      redirect("/auth/signin?callbackUrl=/admin/profile");
+      redirect("/auth/login?callbackUrl=/admin/profile");
     },
   });
 
