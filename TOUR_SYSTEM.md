@@ -8,9 +8,9 @@ This application includes a modern product tour system using the `onborda` libra
 
 The tour automatically shows when:
 
-1. **New User**: A user signs up/logs in for the first time (detected by `createdAt` timestamp within last 5 minutes)
-2. **Never Completed**: User hasn't completed the tour before (stored in `localStorage`)
-3. **Manual Testing**: User is manually marked as "new" via test controls
+1. **API-Driven**: Tour status is determined by API calls to `/api/users/tour-status`
+2. **Dashboard Trigger**: Tour is triggered via custom event from dashboard after checking API status
+3. **Never Completed**: User hasn't completed the tour before (stored in database)
 
 ### Tour Types
 
@@ -30,30 +30,22 @@ The tour automatically shows when:
 components/tour/
 ├── tour-provider.tsx      # Main tour logic and state management
 ├── custom-tour-card.tsx  # Custom tour card UI component
-└── tour-test-controls.tsx # Testing controls (dev only)
+└── tour-error-boundary.tsx # Error boundary for tour system
 
 lib/
 ├── tour-config.ts        # Tour step definitions
-└── tour-utils.ts         # Utility functions for tour management
+└── tour-utils.ts         # API utility functions for tour management
+
+hooks/
+└── use-viewport-constraints.ts # Viewport constraint hook
 ```
 
-## Testing
+## API Integration
 
-### Test Controls (Development)
+The tour system uses API endpoints:
 
-The `TourTestControls` component provides buttons to:
-
-- **Start Tour**: Manually trigger the tour
-- **Reset Tour**: Clear tour completion status
-- **Mark as New User**: Simulate new user experience
-
-### Manual Testing
-
-```javascript
-// In browser console:
-localStorage.setItem("fastcodeai-new-user", "true");
-window.location.reload();
-```
+- **GET `/api/users/tour-status`**: Check if user has completed tour
+- **PATCH `/api/users/tour-completion`**: Mark tour as completed
 
 ## Configuration
 
@@ -83,10 +75,11 @@ Add `id` attributes to elements you want to highlight:
 
 ## Storage
 
-The system uses `localStorage` to track:
+The system uses database storage via API:
 
-- `fastcodeai-tour-completed`: Whether user completed tour
-- `fastcodeai-new-user`: Manual flag for testing new user experience
+- Tour completion status is stored in the database
+- No client-side localStorage dependencies
+- Consistent across devices and sessions
 
 ## Responsive Design
 
@@ -98,6 +91,7 @@ Tour cards automatically adjust for mobile:
 
 ## Integration Points
 
-- **Authentication**: Detects new users via session `createdAt`
+- **Authentication**: Detects new users via session
 - **User Role**: Only shows for `USER` role (not `ADMIN`)
 - **Page Detection**: Automatically selects appropriate tour based on current page
+- **API-Driven**: All tour state managed server-side
