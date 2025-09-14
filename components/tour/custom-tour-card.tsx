@@ -24,12 +24,6 @@ export const CustomTourCard: React.FC<CardComponentProps> = ({
     try {
       // Mark tour as completed via API
       await tourUtils.markTourCompleted();
-
-      // Reset manual testing flag if it was set
-      if (tourUtils.isManuallyMarkedNew()) {
-        localStorage.setItem("fastcodeai-new-user", "false");
-      }
-
       closeOnborda();
     } catch (error) {
       console.error("Failed to mark tour as completed:", error);
@@ -39,7 +33,7 @@ export const CustomTourCard: React.FC<CardComponentProps> = ({
   };
 
   return (
-    <Card className="w-80 shadow-2xl border-2 border-primary/30 bg-white/95 backdrop-blur-sm relative z-[10001] max-w-sm md:w-80 w-72 max-h-[calc(100vh-32px)] overflow-hidden">
+    <Card className="w-80 shadow-2xl border-2 border-primary/30 bg-white/95 backdrop-blur-sm relative z-[10001] max-w-sm max-h-[calc(100vh-32px)] overflow-hidden">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between ">
           <div className="flex items-center gap-2">

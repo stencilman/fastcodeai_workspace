@@ -49,20 +49,4 @@ export const tourUtils = {
   isTourCompleted: (sessionTourCompleted?: boolean) => {
     return sessionTourCompleted === true;
   },
-
-  // Reset tour state (for testing only - removes localStorage flags)
-  resetTourState: () => {
-    localStorage.removeItem("fastcodeai-tour-completed");
-    localStorage.removeItem("fastcodeai-new-user");
-  },
-
-  // Mark as new user (for testing only - uses localStorage)
-  markAsNewUser: () => {
-    localStorage.setItem("fastcodeai-new-user", "true");
-  },
-
-  // Check if manually marked as new (for testing only)
-  isManuallyMarkedNew: () => {
-    return localStorage.getItem("fastcodeai-new-user") === "true";
-  },
 };
