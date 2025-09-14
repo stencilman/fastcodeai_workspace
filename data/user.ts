@@ -1,5 +1,12 @@
 import { db } from "@/lib/db";
-import { User, UserRole, BloodGroup, CreateUserInput, UpdateUserInput, OnboardingStatus } from "@/models/user";
+import {
+  User,
+  UserRole,
+  BloodGroup,
+  CreateUserInput,
+  UpdateUserInput,
+  OnboardingStatus,
+} from "@/models/user";
 
 /**
  * Get a user by their email address
@@ -19,7 +26,9 @@ export const getUserByEmail = async (email: string): Promise<User | null> => {
       phone: user.phone || "",
       address: user.address || "",
       role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
-      onboardingStatus: user.onboardingStatus as any || OnboardingStatus.IN_PROGRESS,
+      onboardingStatus:
+        (user.onboardingStatus as any) || OnboardingStatus.IN_PROGRESS,
+      tourCompleted: user.tourCompleted || false,
       slackUserId: user.slackUserId || undefined,
       linkedinProfile: user.linkedinProfile || undefined,
       bloodGroup: user.bloodGroup as any,
@@ -55,7 +64,9 @@ export const getUserById = async (id: string): Promise<User | null> => {
       phone: user.phone || "",
       address: user.address || "",
       role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
-      onboardingStatus: user.onboardingStatus as any || OnboardingStatus.IN_PROGRESS,
+      onboardingStatus:
+        (user.onboardingStatus as any) || OnboardingStatus.IN_PROGRESS,
+      tourCompleted: user.tourCompleted || false,
       slackUserId: user.slackUserId || undefined,
       linkedinProfile: user.linkedinProfile || undefined,
       bloodGroup: user.bloodGroup as any,
@@ -76,13 +87,15 @@ export const getUserById = async (id: string): Promise<User | null> => {
 /**
  * Create a new user
  */
-export const createUser = async (data: CreateUserInput & {
-  phone?: string;
-  address?: string;
-  slackUserId?: string;
-  linkedinProfile?: string;
-  bloodGroup?: BloodGroup;
-}): Promise<User> => {
+export const createUser = async (
+  data: CreateUserInput & {
+    phone?: string;
+    address?: string;
+    slackUserId?: string;
+    linkedinProfile?: string;
+    bloodGroup?: BloodGroup;
+  }
+): Promise<User> => {
   try {
     const user = await db.user.create({
       data: {
@@ -108,7 +121,9 @@ export const createUser = async (data: CreateUserInput & {
       phone: user.phone || "",
       address: user.address || "",
       role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
-      onboardingStatus: user.onboardingStatus as any || OnboardingStatus.IN_PROGRESS,
+      onboardingStatus:
+        (user.onboardingStatus as any) || OnboardingStatus.IN_PROGRESS,
+      tourCompleted: user.tourCompleted || false,
       slackUserId: user.slackUserId || undefined,
       linkedinProfile: user.linkedinProfile || undefined,
       bloodGroup: user.bloodGroup as any,
@@ -131,7 +146,7 @@ export const createUser = async (data: CreateUserInput & {
  */
 export const updateUser = async (
   id: string,
-  data: UpdateUserInput & Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>
+  data: UpdateUserInput & Partial<Omit<User, "id" | "createdAt" | "updatedAt">>
 ): Promise<User> => {
   try {
     const updateData: any = {};
@@ -145,26 +160,34 @@ export const updateUser = async (
     if (data.image !== undefined) updateData.image = data.image;
     if (data.phone !== undefined) updateData.phone = data.phone;
     if (data.address !== undefined) updateData.address = data.address;
-    if (data.slackUserId !== undefined) updateData.slackUserId = data.slackUserId;
-    if (data.linkedinProfile !== undefined) updateData.linkedinProfile = data.linkedinProfile;
-    if (data.onboardingStatus !== undefined) updateData.onboardingStatus = data.onboardingStatus;
+    if (data.slackUserId !== undefined)
+      updateData.slackUserId = data.slackUserId;
+    if (data.linkedinProfile !== undefined)
+      updateData.linkedinProfile = data.linkedinProfile;
+    if (data.onboardingStatus !== undefined)
+      updateData.onboardingStatus = data.onboardingStatus;
+    if (data.tourCompleted !== undefined)
+      updateData.tourCompleted = data.tourCompleted;
 
     // Handle BloodGroup enum conversion
     if (data.bloodGroup !== undefined) {
       // Map display values to Prisma enum values
       const bloodGroupMapping: Record<string, string> = {
-        'A+': 'A_POSITIVE',
-        'A-': 'A_NEGATIVE',
-        'B+': 'B_POSITIVE',
-        'B-': 'B_NEGATIVE',
-        'AB+': 'AB_POSITIVE',
-        'AB-': 'AB_NEGATIVE',
-        'O+': 'O_POSITIVE',
-        'O-': 'O_NEGATIVE',
+        "A+": "A_POSITIVE",
+        "A-": "A_NEGATIVE",
+        "B+": "B_POSITIVE",
+        "B-": "B_NEGATIVE",
+        "AB+": "AB_POSITIVE",
+        "AB-": "AB_NEGATIVE",
+        "O+": "O_POSITIVE",
+        "O-": "O_NEGATIVE",
       };
 
       // If it's already an enum value or a string that matches the enum format, use it directly
-      if (typeof data.bloodGroup === 'string' && data.bloodGroup in bloodGroupMapping) {
+      if (
+        typeof data.bloodGroup === "string" &&
+        data.bloodGroup in bloodGroupMapping
+      ) {
         updateData.bloodGroup = bloodGroupMapping[data.bloodGroup];
       } else {
         // Otherwise assume it's already in the correct format
@@ -188,7 +211,9 @@ export const updateUser = async (
       phone: user.phone || "",
       address: user.address || "",
       role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
-      onboardingStatus: user.onboardingStatus as any || OnboardingStatus.IN_PROGRESS,
+      onboardingStatus:
+        (user.onboardingStatus as any) || OnboardingStatus.IN_PROGRESS,
+      tourCompleted: user.tourCompleted || false,
       slackUserId: user.slackUserId || undefined,
       linkedinProfile: user.linkedinProfile || undefined,
       bloodGroup: user.bloodGroup as any,
@@ -222,7 +247,9 @@ export const deleteUser = async (id: string): Promise<User> => {
       phone: user.phone || "",
       address: user.address || "",
       role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
-      onboardingStatus: user.onboardingStatus as any || OnboardingStatus.IN_PROGRESS,
+      onboardingStatus:
+        (user.onboardingStatus as any) || OnboardingStatus.IN_PROGRESS,
+      tourCompleted: user.tourCompleted || false,
       slackUserId: user.slackUserId || undefined,
       linkedinProfile: user.linkedinProfile || undefined,
       bloodGroup: user.bloodGroup as any,
@@ -246,17 +273,19 @@ export const deleteUser = async (id: string): Promise<User> => {
 export const getAllUsers = async (): Promise<User[]> => {
   try {
     const users = await db.user.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
-    return users.map(user => ({
+    return users.map((user) => ({
       id: user.id,
       email: user.email || "",
       name: user.name || "",
       phone: user.phone || "",
       address: user.address || "",
       role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
-      onboardingStatus: user.onboardingStatus as any || OnboardingStatus.IN_PROGRESS,
+      onboardingStatus:
+        (user.onboardingStatus as any) || OnboardingStatus.IN_PROGRESS,
+      tourCompleted: user.tourCompleted || false,
       slackUserId: user.slackUserId || undefined,
       linkedinProfile: user.linkedinProfile || undefined,
       bloodGroup: user.bloodGroup as any,
@@ -283,17 +312,19 @@ export const getUsersByRole = async (role: UserRole): Promise<User[]> => {
 
     const users = await db.user.findMany({
       where: { role: dbRole },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
-    return users.map(user => ({
+    return users.map((user) => ({
       id: user.id,
       email: user.email || "",
       name: user.name || "",
       phone: user.phone || "",
       address: user.address || "",
       role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
-      onboardingStatus: user.onboardingStatus as any || OnboardingStatus.IN_PROGRESS,
+      onboardingStatus:
+        (user.onboardingStatus as any) || OnboardingStatus.IN_PROGRESS,
+      tourCompleted: user.tourCompleted || false,
       slackUserId: user.slackUserId || undefined,
       linkedinProfile: user.linkedinProfile || undefined,
       bloodGroup: user.bloodGroup as any,
@@ -319,21 +350,23 @@ export const searchUsers = async (query: string): Promise<User[]> => {
     const users = await db.user.findMany({
       where: {
         OR: [
-          { name: { contains: query, mode: 'insensitive' } },
-          { email: { contains: query, mode: 'insensitive' } },
+          { name: { contains: query, mode: "insensitive" } },
+          { email: { contains: query, mode: "insensitive" } },
         ],
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
-    return users.map(user => ({
+    return users.map((user) => ({
       id: user.id,
       email: user.email || "",
       name: user.name || "",
       phone: user.phone || "",
       address: user.address || "",
       role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
-      onboardingStatus: user.onboardingStatus as any || OnboardingStatus.IN_PROGRESS,
+      onboardingStatus:
+        (user.onboardingStatus as any) || OnboardingStatus.IN_PROGRESS,
+      tourCompleted: user.tourCompleted || false,
       slackUserId: user.slackUserId || undefined,
       linkedinProfile: user.linkedinProfile || undefined,
       bloodGroup: user.bloodGroup as any,

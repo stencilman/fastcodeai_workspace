@@ -46,27 +46,29 @@ model User {
   name          String?
   firstName     String?
   lastName      String?
-  email         String?    @unique
+  email         String?   @unique
   emailVerified DateTime?
   password      String?
   image         String?
-  
+
   // Additional fields for user profile
-  phone         String?
-  address       String?
-  slackUserId   String?
+  phone           String?
+  address         String?
+  slackUserId     String?
   linkedinProfile String?
-  bloodGroup    BloodGroup?
-  
+  bloodGroup      BloodGroup?
+
   // Relations
-  accounts       Account[]
-  documents      Document[]
+  accounts  Account[]
+  documents Document[]
 
   // System fields
-  role          UserRole  @default(USER)
+  role             UserRole         @default(USER)
   onboardingStatus OnboardingStatus @default(IN_PROGRESS)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+
+  tourCompleted Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   // Indexes for frequently accessed fields
   @@index([role])
@@ -96,27 +98,26 @@ model Account {
 }
 
 model Document {
-  id          String         @id @default(cuid())
-  userId      String
-  type        DocumentType
-  fileName    String         // Original file name
-  fileSize    Int            // Size in bytes
-  fileType    String         // MIME type
-  s3Key       String         // Path/key in S3 bucket
-  status      DocumentStatus @default(PENDING)
-  uploadedAt  DateTime       @default(now())
-  reviewedBy  String?        // Admin userId who reviewed the document
-  reviewedAt  DateTime?      // When the document was reviewed
-  notes       String?        // Admin notes on document
-  
+  id         String         @id @default(cuid())
+  userId     String
+  type       DocumentType
+  fileName   String // Original file name
+  fileSize   Int // Size in bytes
+  fileType   String // MIME type
+  s3Key      String // Path/key in S3 bucket
+  status     DocumentStatus @default(PENDING)
+  uploadedAt DateTime       @default(now())
+  reviewedBy String? // Admin userId who reviewed the document
+  reviewedAt DateTime? // When the document was reviewed
+  notes      String? // Admin notes on document
+
   // Relations
-  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Existing indexes
   @@index([userId])
   @@index([type])
   @@index([status])
-  
   // Additional indexes for dashboard performance
   @@index([uploadedAt])
   @@index([reviewedBy])

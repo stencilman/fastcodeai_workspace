@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useOnborda } from "onborda";
+import { tourUtils } from "@/lib/tour-utils";
 
 export const CustomTourCard: React.FC<CardComponentProps> = ({
   step,
@@ -19,10 +20,28 @@ export const CustomTourCard: React.FC<CardComponentProps> = ({
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === totalSteps - 1;
 
+  const handleCloseTour = async () => {
+    try {
+      // Mark tour as completed via API
+      await tourUtils.markTourCompleted();
+
+      // Reset manual testing flag if it was set
+      if (tourUtils.isManuallyMarkedNew()) {
+        localStorage.setItem("fastcodeai-new-user", "false");
+      }
+
+      closeOnborda();
+    } catch (error) {
+      console.error("Failed to mark tour as completed:", error);
+      // Still close the tour even if API call fails
+      closeOnborda();
+    }
+  };
+
   return (
-    <Card className="w-80 shadow-2xl border-2 border-primary/30 bg-white/95 backdrop-blur-sm relative z-[10001] max-w-sm md:w-80 w-72">
+    <Card className="w-80 shadow-2xl border-2 border-primary/30 bg-white/95 backdrop-blur-sm relative z-[10001] max-w-sm md:w-80 w-72 max-h-[calc(100vh-32px)] overflow-hidden">
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between ">
           <div className="flex items-center gap-2">
             <span className="text-2xl">{step.icon}</span>
             <CardTitle className="text-lg font-semibold text-gray-900">
@@ -32,7 +51,7 @@ export const CustomTourCard: React.FC<CardComponentProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={closeOnborda}
+            onClick={handleCloseTour}
             className="h-6 w-6 hover:bg-gray-100"
           >
             <X className="h-4 w-4" />
@@ -42,7 +61,7 @@ export const CustomTourCard: React.FC<CardComponentProps> = ({
       <CardContent className="space-y-4">
         <p className="text-sm text-gray-700 leading-relaxed">{step.content}</p>
 
-        <div className="flex items-center justify-between">
+        <div className="flex sm:items-center justify-between flex-col sm:flex-row gap-2">
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-gray-600">
               {currentStep + 1} of {totalSteps}
@@ -78,11 +97,11 @@ export const CustomTourCard: React.FC<CardComponentProps> = ({
 
             {isLastStep ? (
               <Button
-                onClick={closeOnborda}
+                onClick={handleCloseTour}
                 size="sm"
                 className="h-8 px-3 text-xs bg-primary hover:bg-primary/90"
               >
-                Skip Tour
+                Complete Tour
               </Button>
             ) : (
               <Button

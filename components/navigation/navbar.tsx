@@ -66,7 +66,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="h-14 w-full border-b flex items-center justify-between px-4 fixed z-50 bg-white">
+    <header className="h-14 w-full border-b flex items-center justify-between px-4 fixed z-[1100] bg-white">
       <div className="flex items-center gap-2">
         {/* Mobile menu button - only visible on small screens */}
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>

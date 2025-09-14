@@ -36,7 +36,7 @@ export const userOnboardingTourDesktop: Tour[] = [
         content:
           "Check out the General Guidelines to learn about company policies, communication guidelines, and office entry procedures.",
         selector: "#user-guide-button",
-        side: "bottom-left",
+        side: "top",
         pointerPadding: 12,
         pointerRadius: 12,
       },
@@ -75,7 +75,7 @@ export const userOnboardingTourMobile: Tour[] = [
         content:
           "Check out the General Guidelines to learn about company policies, communication guidelines, and office entry procedures.",
         selector: "#user-guide-button",
-        side: "bottom-left",
+        side: "top",
         pointerPadding: 12,
         pointerRadius: 12,
       },

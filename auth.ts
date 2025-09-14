@@ -90,14 +90,29 @@ export const {
         session.user.role = token.role as UserRole;
       }
 
+      if (session.user && token.createdAt) {
+        session.user.createdAt = token.createdAt as string;
+      }
+
+      if (session.user && token.tourCompleted !== undefined) {
+        session.user.tourCompleted = token.tourCompleted as boolean;
+      }
+
       return session;
     },
     async jwt({ token }) {
       // Avoid Prisma call when running in Edge runtime (e.g. during middleware)
       if (token.sub && !token.role) {
-        if (process.env.NEXT_RUNTIME !== "edge" && !(globalThis as any).EdgeRuntime) {
+        if (
+          process.env.NEXT_RUNTIME !== "edge" &&
+          !(globalThis as any).EdgeRuntime
+        ) {
           const dbUser = await getUserById(token.sub).catch(() => null);
-          if (dbUser) token.role = dbUser.role;
+          if (dbUser) {
+            token.role = dbUser.role;
+            token.createdAt = dbUser.createdAt?.toISOString();
+            token.tourCompleted = dbUser.tourCompleted;
+          }
         }
       }
       return token;

@@ -36,6 +36,31 @@
   max-width: 320px !important;
 }
 
+/* Ensure tour cards stay within viewport boundaries */
+.onborda-card-container {
+  max-width: calc(100vw - 32px) !important;
+  max-height: calc(100vh - 32px) !important;
+  left: max(16px, min(16px, calc(100vw - 336px))) !important;
+  top: max(16px, min(16px, calc(100vh - 200px))) !important;
+}
+
+/* Ensure tour cards don't go off-screen on desktop */
+[data-onborda-card] {
+  max-width: calc(100vw - 32px) !important;
+  max-height: calc(100vh - 32px) !important;
+  overflow: hidden !important;
+}
+
+/* Force tour cards to stay within viewport */
+.onborda-card-wrapper {
+  position: fixed !important;
+  z-index: 10001 !important;
+  pointer-events: auto !important;
+  max-width: calc(100vw - 32px) !important;
+  max-height: calc(100vh - 32px) !important;
+  transform: translateX(0) translateY(0) !important;
+}
+
 /* Mobile-specific tour positioning */
 @media (max-width: 768px) {
   .onborda-step-card {
@@ -45,8 +70,21 @@
   
   /* Ensure tour cards don't go off-screen on mobile */
   [data-onborda-card] {
-    max-width: calc(100vw - 32px) !important;
-    margin: 16px !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100vh - 16px) !important;
+    margin: 8px !important;
+  }
+  
+  .onborda-card-container {
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100vh - 16px) !important;
+    left: max(8px, min(8px, calc(100vw - 296px))) !important;
+    top: max(8px, min(8px, calc(100vh - 200px))) !important;
+  }
+  
+  .onborda-card-wrapper {
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100vh - 16px) !important;
   }
 }
 

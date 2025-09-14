@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { tourUtils } from "@/lib/tour-utils";
 import {
   Card,
   CardContent,
@@ -106,6 +107,7 @@ export default function UserDashboardPage() {
     data: dashboardData,
     isLoading,
     error,
+    isSuccess,
   } = useQuery<DashboardData, Error>({
     queryKey: ["userDashboard"],
     queryFn: async () => {
@@ -119,6 +121,32 @@ export default function UserDashboardPage() {
     staleTime: 30000, // 30 seconds
     refetchOnWindowFocus: true,
   });
+
+  // Trigger tour check after dashboard loads successfully
+  useEffect(() => {
+    if (isSuccess && dashboardData) {
+      const triggerTourCheck = async () => {
+        try {
+          // Check tour completion status via API
+          const tourCompleted = await tourUtils.checkTourStatus();
+
+          if (!tourCompleted) {
+            // Dispatch custom event to show tour immediately
+            window.dispatchEvent(new CustomEvent("show-tour"));
+          }
+        } catch (error) {
+          console.error(
+            "Error checking tour status after dashboard load:",
+            error
+          );
+          // Default to showing tour if API call fails
+          window.dispatchEvent(new CustomEvent("show-tour"));
+        }
+      };
+
+      triggerTourCheck();
+    }
+  }, [isSuccess, dashboardData]);
 
   // Memoize recent activity data to prevent unnecessary re-renders
   const memoizedRecentActivity = useMemo(() => {

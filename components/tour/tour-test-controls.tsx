@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useOnborda } from "onborda";
+import { tourUtils } from "@/lib/tour-utils";
 
 export function TourTestControls() {
   const { startOnborda } = useOnborda();
@@ -16,7 +17,12 @@ export function TourTestControls() {
   };
 
   const handleResetTour = () => {
-    localStorage.removeItem("fastcodeai-tour-completed");
+    tourUtils.resetTourState();
+    window.location.reload();
+  };
+
+  const handleMarkAsNewUser = () => {
+    tourUtils.markAsNewUser();
     window.location.reload();
   };
 
@@ -32,6 +38,14 @@ export function TourTestControls() {
         className="w-full"
       >
         🔄 Reset Tour
+      </Button>
+      <Button
+        onClick={handleMarkAsNewUser}
+        variant="outline"
+        size="sm"
+        className="w-full"
+      >
+        👤 Mark as New User
       </Button>
     </div>
   );
