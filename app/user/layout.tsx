@@ -23,7 +23,7 @@ export default function UserLayout({
   // }, []);
 
   return (
-    <TourProvider>
+    <>
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <div className="flex flex-1">
@@ -73,6 +73,6 @@ export default function UserLayout({
           <main className="flex-1 p-6 overflow-y-auto mt-14">{children}</main>
         </div>
       </div>
-    </TourProvider>
+    </>
   );
 }
