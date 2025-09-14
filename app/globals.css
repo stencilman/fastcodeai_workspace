@@ -1,6 +1,55 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Onborda tour styles */
+.onborda-overlay {
+  z-index: 9999 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(2px) !important;
+}
+
+.onborda-card {
+  z-index: 10000 !important;
+}
+
+/* Ensure tour elements are properly positioned */
+[data-onborda] {
+  z-index: 0 !important;
+}
+
+/* Improve tour card positioning */
+.onborda-card-container {
+  position: fixed !important;
+  z-index: 10001 !important;
+}
+
+/* Ensure tour cards don't overlap with content */
+.onborda-card-wrapper {
+  position: fixed !important;
+  z-index: 10001 !important;
+  pointer-events: auto !important;
+}
+
+/* Better spacing for tour elements */
+.onborda-step-card {
+  margin: 16px !important;
+  max-width: 320px !important;
+}
+
+/* Mobile-specific tour positioning */
+@media (max-width: 768px) {
+  .onborda-step-card {
+    margin: 8px !important;
+    max-width: 280px !important;
+  }
+  
+  /* Ensure tour cards don't go off-screen on mobile */
+  [data-onborda-card] {
+    max-width: calc(100vw - 32px) !important;
+    margin: 16px !important;
+  }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { DocumentStatus, DocumentType } from "@/models/document";
 import { formatDistanceToNow } from "date-fns";
+import { TourTestControls } from "@/components/tour/tour-test-controls";
 
 // Type definitions for dashboard data
 interface DashboardData {
@@ -99,10 +100,14 @@ const StatusBadge = ({ status }: { status: DocumentStatus }) => {
 
 export default function UserDashboardPage() {
   const { status } = useSession();
-  
+
   // Use React Query for data fetching with caching
-  const { data: dashboardData, isLoading, error } = useQuery<DashboardData, Error>({
-    queryKey: ['userDashboard'],
+  const {
+    data: dashboardData,
+    isLoading,
+    error,
+  } = useQuery<DashboardData, Error>({
+    queryKey: ["userDashboard"],
     queryFn: async () => {
       const response = await fetch("/api/users/dashboard");
       if (!response.ok) {
@@ -114,13 +119,13 @@ export default function UserDashboardPage() {
     staleTime: 30000, // 30 seconds
     refetchOnWindowFocus: true,
   });
-  
+
   // Memoize recent activity data to prevent unnecessary re-renders
   const memoizedRecentActivity = useMemo(() => {
     if (!dashboardData?.recentActivity) return [];
     return dashboardData.recentActivity;
   }, [dashboardData?.recentActivity]);
-  
+
   // Memoize missing document types
   const memoizedMissingDocuments = useMemo(() => {
     if (!dashboardData?.missingDocumentTypes) return [];
@@ -169,7 +174,9 @@ export default function UserDashboardPage() {
         <p className="text-muted-foreground mb-4">
           {status === "unauthenticated"
             ? "You need to be signed in to access this page"
-            : error instanceof Error ? error.message : "Something went wrong"}
+            : error instanceof Error
+            ? error.message
+            : "Something went wrong"}
         </p>
         <Button asChild>
           <Link
@@ -343,6 +350,7 @@ export default function UserDashboardPage() {
           </CardContent>
           <CardFooter className="pt-0 mt-auto">
             <Button
+              id="user-guide-button"
               variant="ghost"
               size="sm"
               className="w-full justify-start"
@@ -360,28 +368,33 @@ export default function UserDashboardPage() {
       <div className="space-y-6">
         {/* Document status badges */}
         <div className="space-y-3">
-        {/* Show when all documents are uploaded */}
-        {dashboardData?.missingDocumentTypes &&
-          dashboardData.missingDocumentTypes.length === 0 && (
-            <div className="flex items-center gap-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-md px-3 py-1.5 w-fit">
-              <CheckCircle className="h-4 w-4" />
-              <span className="text-sm font-medium">
-                All documents uploaded
-              </span>
-            </div>
-          )}
-        
-        {/* Show when there are rejected documents */}
-        {dashboardData?.documentStats && dashboardData.documentStats.rejected > 0 && (
-          <Link href="/user/documents?tab=rejected">
-            <div className="flex items-center gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-md px-3 py-1.5 w-fit cursor-pointer hover:bg-red-100 dark:hover:bg-red-950/40 transition-colors">
-              <AlertCircle className="h-4 w-4" />
-              <span className="text-sm font-medium">
-                {dashboardData.documentStats.rejected} {dashboardData.documentStats.rejected === 1 ? 'document' : 'documents'} rejected
-              </span>
-            </div>
-          </Link>
-        )}
+          {/* Show when all documents are uploaded */}
+          {dashboardData?.missingDocumentTypes &&
+            dashboardData.missingDocumentTypes.length === 0 && (
+              <div className="flex items-center gap-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-md px-3 py-1.5 w-fit">
+                <CheckCircle className="h-4 w-4" />
+                <span className="text-sm font-medium">
+                  All documents uploaded
+                </span>
+              </div>
+            )}
+
+          {/* Show when there are rejected documents */}
+          {dashboardData?.documentStats &&
+            dashboardData.documentStats.rejected > 0 && (
+              <Link href="/user/documents?tab=rejected">
+                <div className="flex items-center gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-md px-3 py-1.5 w-fit cursor-pointer hover:bg-red-100 dark:hover:bg-red-950/40 transition-colors">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="text-sm font-medium">
+                    {dashboardData.documentStats.rejected}{" "}
+                    {dashboardData.documentStats.rejected === 1
+                      ? "document"
+                      : "documents"}{" "}
+                    rejected
+                  </span>
+                </div>
+              </Link>
+            )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -441,7 +454,13 @@ export default function UserDashboardPage() {
               )}
             </CardContent>
             <CardFooter>
-              <Button variant="outline" size="sm" className="w-full" asChild>
+              <Button
+                id="upload-documents-button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                asChild
+              >
                 <Link href="/user/documents?tab=pending_submission">
                   <Upload className="h-4 w-4 mr-2" /> Upload Documents
                 </Link>
@@ -451,39 +470,38 @@ export default function UserDashboardPage() {
 
           {/* Required Documents - Only show if there are missing documents */}
           {memoizedMissingDocuments.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Required Documents</CardTitle>
-                  <CardDescription>
-                    Documents you need to upload
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {memoizedMissingDocuments.map((docType) => (
-                      <div
-                        key={docType}
-                        className="flex items-center justify-between p-2 bg-muted rounded-md"
-                      >
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-primary" />
-                          <span>{documentTypeNames[docType]}</span>
-                        </div>
-                        <Button size="sm" variant="secondary" asChild>
-                          <Link
-                            href={`/user/documents?type=${docType}&open=true`}
-                          >
-                            Upload
-                          </Link>
-                        </Button>
+            <Card id="required-documents-section">
+              <CardHeader>
+                <CardTitle>Required Documents</CardTitle>
+                <CardDescription>Documents you need to upload</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {memoizedMissingDocuments.map((docType) => (
+                    <div
+                      key={docType}
+                      className="flex items-center justify-between p-2 bg-muted rounded-md"
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-primary" />
+                        <span>{documentTypeNames[docType]}</span>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                      <Button size="sm" variant="secondary" asChild>
+                        <Link
+                          href={`/user/documents?type=${docType}&open=true`}
+                        >
+                          Upload
+                        </Link>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
+      <TourTestControls />
     </div>
   );
 }

@@ -184,7 +184,7 @@ export function FileUploadDrawer({
               value={selectedDocType || ""}
               onValueChange={(value) => onDocTypeChange(value as DocumentType)}
             >
-              <SelectTrigger id="document-type">
+              <SelectTrigger id="document-type-selector">
                 <SelectValue placeholder="Select document type" />
               </SelectTrigger>
               <SelectContent>
@@ -199,6 +199,7 @@ export function FileUploadDrawer({
 
           {/* Drag & Drop Area */}
           <div
+            id="file-upload-area"
             className={cn(
               "border-2 border-dashed rounded-lg p-6 transition-colors",
               isDragging
@@ -274,6 +275,7 @@ export function FileUploadDrawer({
         </div>
         <DrawerFooter>
           <Button
+            id="upload-submit-button"
             onClick={handleUpload}
             disabled={!file || !selectedDocType || isUploading}
           >
