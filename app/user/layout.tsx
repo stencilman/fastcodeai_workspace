@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import SideNav from "@/components/navigation/side-nav";
 import Navbar from "@/components/navigation/navbar";
 import { cn } from "@/lib/utils/utils";
@@ -15,12 +15,12 @@ export default function UserLayout({
   // Use null as initial state to avoid hydration mismatch
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  // const [mounted, setMounted] = useState(false);
 
   // Only render client-specific UI after mounting
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // useEffect(() => {
+  //   setMounted(true);
+  // }, []);
 
   return (
     <TourProvider>
@@ -41,7 +41,7 @@ export default function UserLayout({
           </div>
 
           {/* Mobile overlay */}
-          {mounted && mobileOpen && (
+          { mobileOpen && (
             <div
               className="md:hidden fixed inset-0 bg-black/50 z-20"
               onClick={() => setMobileOpen(false)}
@@ -53,20 +53,20 @@ export default function UserLayout({
             id="sidebar-navigation"
             className={cn(
               "border-r transition-all duration-300 bg-white relative z-20",
-              mounted && collapsed ? "w-16" : "w-64",
-              mounted && mobileOpen
+               collapsed ? "w-16" : "w-64",
+               mobileOpen
                 ? "fixed left-0 top-0 h-full bg-background z-20"
                 : "hidden md:block"
             )}
           >
-            {mounted && (
+            {/* {mounted && ( */}
               <SideNav
                 isAdmin={false}
                 collapsed={collapsed}
                 setCollapsed={setCollapsed}
                 setMobileOpen={setMobileOpen}
               />
-            )}
+            {/* )} */}
           </aside>
 
           {/* Main content */}
