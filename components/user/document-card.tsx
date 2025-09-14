@@ -25,7 +25,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
-import { requiredDocuments } from "./file-upload-drawer";
+import { requiredDocuments } from "@/lib/constants/documents";
 import { getDocumentUrl } from "@/lib/document-upload-service";
 
 interface DocumentCardProps {
@@ -61,7 +61,7 @@ export function DocumentCard({
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
 
   // Get document details from type
-  const docDetails = requiredDocuments.find((doc) => doc.type === docType);
+  const docDetails = requiredDocuments?.find((doc) => doc.type === docType);
   const isUploaded = !!document;
 
   // Determine file type
