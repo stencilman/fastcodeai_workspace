@@ -30,10 +30,11 @@ export const adminRoutes = ["/admin", "/admin/settings"];
  */
 export const userRoutes = [
   "/user/dashboard",
-  "/user/expenses",
-  "/user/reports",
+  "/user/documents",
+  "/user/profile",
+  "/user/general-guidelines",
+  "/user/holidays",
   "/user/settings",
-  "/user/testsetting",
 ];
 
 /**

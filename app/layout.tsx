@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FastCodeAI Workspace",
-  description: "FastCodeAI Workspace",
+  title: "FastCodeAI DayOne",
+  description: "FastCodeAI DayOne",
 };
 
 export default function RootLayout({
