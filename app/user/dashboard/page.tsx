@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { DocumentStatus, DocumentType } from "@/models/document";
 import { formatDistanceToNow } from "date-fns";
-import { TourTestControls } from "@/components/tour/tour-test-controls";
+import { documentTypeNames } from "@/lib/constants/documents";
 
 // Type definitions for dashboard data
 interface DashboardData {
@@ -66,14 +66,6 @@ interface DashboardData {
     documentsCompletion: number;
   };
 }
-
-// Document type display names
-const documentTypeNames: Record<DocumentType, string> = {
-  [DocumentType.PAN_CARD]: "PAN Card",
-  [DocumentType.AADHAR_CARD]: "Aadhaar Card",
-  [DocumentType.CANCELLED_CHEQUE]: "Cancelled Cheque",
-  [DocumentType.OFFER_LETTER]: "Offer Letter",
-};
 
 // Status badge component
 const StatusBadge = ({ status }: { status: DocumentStatus }) => {

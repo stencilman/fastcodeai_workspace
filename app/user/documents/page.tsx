@@ -8,10 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loading } from "@/components/ui/loading";
 import { FileText } from "lucide-react";
 import { DocumentCard } from "@/components/user/document-card";
-import {
-  FileUploadDrawer,
-  requiredDocuments,
-} from "@/components/user/file-upload-drawer";
+import { FileUploadDrawer } from "@/components/user/file-upload-drawer";
+import { requiredDocuments } from "@/lib/constants/documents";
 import {
   getUserDocuments,
   initiateDocumentUpload,
@@ -27,28 +25,36 @@ export default function UserDocumentsPage() {
     null
   );
   const [isUploading, setIsUploading] = useState(false);
-  
+
   // Check URL parameters for auto-opening drawer with selected document type
   // and for setting the active tab
   useEffect(() => {
-    const typeParam = searchParams.get('type');
-    const openParam = searchParams.get('open');
-    const tabParam = searchParams.get('tab');
-    
+    const typeParam = searchParams.get("type");
+    const openParam = searchParams.get("open");
+    const tabParam = searchParams.get("tab");
+
     // Handle document type and drawer opening
-    if (typeParam && openParam === 'true') {
+    if (typeParam && openParam === "true") {
       // Set the document type from URL parameter
       setSelectedDocType(typeParam as DocumentType);
       setDrawerOpen(true);
-      
+
       // Set the appropriate tab
-      setActiveTab('pending_submission');
+      setActiveTab("pending_submission");
     }
-    
+
     // Handle tab selection
     if (tabParam) {
       // Valid tab values: all, pending_submission, pending_approval, approved, rejected
-      if (['all', 'pending_submission', 'pending_approval', 'approved', 'rejected'].includes(tabParam)) {
+      if (
+        [
+          "all",
+          "pending_submission",
+          "pending_approval",
+          "approved",
+          "rejected",
+        ].includes(tabParam)
+      ) {
         setActiveTab(tabParam);
       }
     }
@@ -63,24 +69,25 @@ export default function UserDocumentsPage() {
     queryKey: ["userDocuments"],
     queryFn: getUserDocuments,
     staleTime: 0,
-    refetchOnMount: 'always',
+    refetchOnMount: "always",
     refetchOnWindowFocus: true,
   });
-  
+
   // Derive all document-related data from allDocuments
   const documents = useMemo(() => allDocuments || [], [allDocuments]);
-  
+
   // Get uploaded document types - derived from documents
-  const uploadedDocTypes = useMemo(() => 
-    documents.map((doc: Document) => doc.type),
+  const uploadedDocTypes = useMemo(
+    () => documents.map((doc: Document) => doc.type),
     [documents]
   );
 
   // Get missing document types
-  const missingDocTypes = useMemo(() => 
-    requiredDocuments
-      .map((doc) => doc.type)
-      .filter((type) => !uploadedDocTypes.includes(type)),
+  const missingDocTypes = useMemo(
+    () =>
+      requiredDocuments
+        ?.map((doc) => doc.type)
+        .filter((type) => !uploadedDocTypes.includes(type)) || [],
     [uploadedDocTypes]
   );
 
@@ -92,23 +99,28 @@ export default function UserDocumentsPage() {
         return !uploadedDocTypes.includes(doc.type);
       if (activeTab === "pending_approval")
         return doc.status === DocumentStatus.PENDING;
-      if (activeTab === "approved") return doc.status === DocumentStatus.APPROVED;
-      if (activeTab === "rejected") return doc.status === DocumentStatus.REJECTED;
+      if (activeTab === "approved")
+        return doc.status === DocumentStatus.APPROVED;
+      if (activeTab === "rejected")
+        return doc.status === DocumentStatus.REJECTED;
       return true;
     });
   }, [documents, activeTab, uploadedDocTypes]);
-  
+
   // Group documents by type to show only the latest one for each type
   const latestDocsByType = useMemo(() => {
     const docMap = new Map<DocumentType, Document>();
-    
+
     documents.forEach((doc: Document) => {
       const existingDoc = docMap.get(doc.type);
-      if (!existingDoc || new Date(doc.uploadedAt) > new Date(existingDoc.uploadedAt)) {
+      if (
+        !existingDoc ||
+        new Date(doc.uploadedAt) > new Date(existingDoc.uploadedAt)
+      ) {
         docMap.set(doc.type, doc);
       }
     });
-    
+
     return docMap;
   }, [documents]);
 
@@ -138,10 +150,7 @@ export default function UserDocumentsPage() {
       setIsUploading(true);
 
       // Step 1: Create document record in the database
-      const { documentId } = await initiateDocumentUpload(
-        file,
-        docType
-      );
+      const { documentId } = await initiateDocumentUpload(file, docType);
 
       // Step 2: Upload file to S3 through the backend
       await uploadFileToS3(file, documentId);
@@ -227,7 +236,7 @@ export default function UserDocumentsPage() {
 
         <TabsContent value="all" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {requiredDocuments.map((docType) => {
+            {requiredDocuments?.map((docType) => {
               // Use the latestDocsByType map to efficiently find documents
               const uploadedDoc = findDocumentByType(docType.type);
 
@@ -274,7 +283,7 @@ export default function UserDocumentsPage() {
             {(() => {
               // Filter only documents with PENDING status - using memoized filteredDocuments
               const pendingDocs = filteredDocuments;
-              
+
               if (pendingDocs.length > 0) {
                 return pendingDocs.map((doc: Document) => (
                   <DocumentCard

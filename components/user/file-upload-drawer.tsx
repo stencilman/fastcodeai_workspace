@@ -21,37 +21,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileText, Upload, X } from "lucide-react";
+import { Upload, X, FileText } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { toast } from "sonner";
-
-// Define required document types
-export const requiredDocuments = [
-  {
-    type: DocumentType.AADHAR_CARD,
-    label: "Aadhaar Card",
-    description: "Upload your Aadhaar card (front and back)",
-    icon: FileText,
-  },
-  {
-    type: DocumentType.PAN_CARD,
-    label: "PAN Card",
-    description: "Upload your PAN card",
-    icon: FileText,
-  },
-  {
-    type: DocumentType.CANCELLED_CHEQUE,
-    label: "Cancelled Cheque",
-    description: "Upload a cancelled cheque for bank verification",
-    icon: FileText,
-  },
-  {
-    type: DocumentType.OFFER_LETTER,
-    label: "Offer Letter",
-    description: "Upload your signed offer letter",
-    icon: FileText,
-  },
-];
+import { requiredDocuments } from "@/lib/constants/documents";
 
 interface FileUploadDrawerProps {
   open: boolean;
@@ -75,7 +48,7 @@ export function FileUploadDrawer({
 
   // Get document details by type
   const getDocumentDetails = (type: DocumentType | null) => {
-    if (!type) return null;
+    if (!type || !requiredDocuments) return null;
     return requiredDocuments.find((doc) => doc.type === type);
   };
 

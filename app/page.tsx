@@ -20,7 +20,7 @@ export default function Home() {
     <div className="flex flex-col items-center justify-center h-screen">
       <div className="flex flex-col items-center justify-center">
         <Image src="/brain.svg" alt="FastcodeAI" width={50} height={50} />
-        <h1 className="text-2xl font-bold">FastcodeAI Day One</h1>
+        <h1 className="text-2xl font-bold">FastCodeAI Day One</h1>
       </div>
       <Button className="mt-4" onClick={() => router.push("/auth/login")}>
         Login
