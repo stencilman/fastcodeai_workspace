@@ -91,7 +91,7 @@ export default function Login() {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">
-            Welcome to FastCodeAI
+            Welcome to FastCodeAI Day One
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col items-center space-y-6 pt-4">
