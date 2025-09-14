@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum BloodGroup {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+}
+
+enum DocumentType {
+  PAN_CARD
+  AADHAR_CARD
+  CANCELLED_CHEQUE
+  OFFER_LETTER
+}
+
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum OnboardingStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  firstName     String?
+  lastName      String?
+  email         String?   @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+
+  // Additional fields for user profile
+  phone           String?
+  address         String?
+  slackUserId     String?
+  linkedinProfile String?
+  bloodGroup      BloodGroup?
+
+  // Relations
+  accounts  Account[]
+  documents Document[]
+
+  // System fields
+  role             UserRole         @default(USER)
+  onboardingStatus OnboardingStatus @default(IN_PROGRESS)
+
+  tourCompleted Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Indexes for frequently accessed fields
+  @@index([role])
+  @@index([onboardingStatus])
+  @@index([createdAt])
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Document {
+  id         String         @id @default(cuid())
+  userId     String
+  type       DocumentType
+  fileName   String // Original file name
+  fileSize   Int // Size in bytes
+  fileType   String // MIME type
+  s3Key      String // Path/key in S3 bucket
+  status     DocumentStatus @default(PENDING)
+  uploadedAt DateTime       @default(now())
+  reviewedBy String? // Admin userId who reviewed the document
+  reviewedAt DateTime? // When the document was reviewed
+  notes      String? // Admin notes on document
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Existing indexes
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  // Additional indexes for dashboard performance
+  @@index([uploadedAt])
+  @@index([reviewedBy])
+  @@index([reviewedAt])
+  @@index([userId, status])
+  @@index([type, status])
+}
