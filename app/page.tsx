@@ -1,31 +1,30 @@
 "use client";
-
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { UserRole } from "@prisma/client";
-import { DashboardSkeleton } from "@/components/ui/dashboard-skeleton";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 export default function Home() {
   const router = useRouter();
-  const { data: session, status } = useSession();
 
-  useEffect(() => {
-    if (status === "loading") return;
+  // useEffect(() => {
+  //   router.push("/user/dashboard");
+  // }, [router]);
 
-    if (status === "unauthenticated") {
-      router.push("/auth/login");
-      return;
-    }
-
-    // Check user role and redirect accordingly
-    if (session?.user?.role === UserRole.ADMIN) {
-      router.push("/admin/dashboard");
-    } else {
-      router.push("/user/dashboard");
-    }
-  }, [router, session, status]);
-
-  // Show loading state while checking authentication
-  return <DashboardSkeleton />;
+  return (
+    // <div className="flex items-center justify-center min-h-screen">
+    //   <div className="text-center">
+    //     <h2 className="text-2xl font-semibold">Redirecting...</h2>
+    //     <p className="text-muted-foreground mt-2">Please wait while we redirect you to the dashboard.</p>
+    //   </div>
+    // </div>
+    <div className="flex flex-col items-center justify-center h-screen">
+      <div className="flex flex-col items-center justify-center">
+        <Image src="/brain.svg" alt="FastcodeAI" width={50} height={50} />
+        <h1 className="text-2xl font-bold">FastcodeAI Day One</h1>
+      </div>
+      <Button className="mt-4" onClick={() => router.push("/auth/login")}>
+        Login
+      </Button>
+    </div>
+  );
 }
