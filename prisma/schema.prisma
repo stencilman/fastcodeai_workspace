@@ -57,6 +57,13 @@ model User {
   slackUserId     String?
   linkedinProfile String?
   bloodGroup      BloodGroup?
+  
+  // Checklist fields
+  linkedinUpdated      Boolean @default(false)
+  profilePictureUpdated Boolean @default(false)
+  teamBioProvided      Boolean @default(false)
+  teamBio              String?
+  teamImageS3Key       String?
 
   // Relations
   accounts  Account[]

@@ -7,6 +7,7 @@ import { ProfileDetailsForm } from "@/components/common/profile-details-form";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
+import { ProfileChecklist } from "@/components/user/profile-checklist";
 
 // Function to fetch user data from the API
 const fetchUserData = async (userId: string): Promise<User> => {
@@ -69,23 +70,39 @@ export default function ProfilePage() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="space-y-1">
+      <div className="space-y-6">
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="space-y-1">
+              <CardTitle className="text-lg font-medium">
+                {userData.name}
+              </CardTitle>
+              <p className="text-sm text-muted-foreground break-all">
+                {userData.email}
+              </p>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <ProfileDetailsForm userData={userData} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
             <CardTitle className="text-lg font-medium">
-              {userData.name}
+              Onboarding Checklist
             </CardTitle>
-            <p className="text-sm text-muted-foreground break-all">
-              {userData.email}
+            <p className="text-sm text-muted-foreground">
+              Complete these tasks to finish your onboarding
             </p>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <ProfileDetailsForm userData={userData} />
-          </div>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent>
+            <ProfileChecklist userId={userData.id} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

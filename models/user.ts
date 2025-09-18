@@ -23,14 +23,22 @@ export interface User {
   id: string;
   email: string; // company email
   name: string;
-  phone: string; // Not in DB schema, maintained in application layer
-  address: string; // Not in DB schema, maintained in application layer
+  phone: string;
+  address: string;
   role: UserRole;
   onboardingStatus: OnboardingStatus;
   tourCompleted: boolean;
-  slackUserId?: string; // Not in DB schema, maintained in application layer
-  linkedinProfile?: string; // Not in DB schema, maintained in application layer
-  bloodGroup?: BloodGroup; // Not in DB schema, maintained in application layer
+  slackUserId?: string;
+  linkedinProfile?: string;
+  bloodGroup?: BloodGroup;
+  
+  // Checklist fields
+  linkedinUpdated: boolean;
+  profilePictureUpdated: boolean;
+  teamBioProvided: boolean;
+  teamBio?: string;
+  teamImageS3Key?: string;
+  
   createdAt: Date;
   updatedAt: Date;
 
@@ -64,4 +72,18 @@ export interface UpdateUserInput {
   image?: string;
   onboardingStatus?: OnboardingStatus;
   tourCompleted?: boolean;
+  
+  // Checklist fields
+  linkedinUpdated?: boolean;
+  profilePictureUpdated?: boolean;
+  teamBioProvided?: boolean;
+  teamBio?: string;
+  teamImageS3Key?: string;
+  
+  // Profile fields
+  phone?: string;
+  address?: string;
+  slackUserId?: string;
+  linkedinProfile?: string;
+  bloodGroup?: BloodGroup;
 }

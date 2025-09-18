@@ -104,6 +104,13 @@ export async function PATCH(
         if (body.password !== undefined) updateData.password = body.password;
         if (body.image !== undefined) updateData.image = body.image;
         if (body.onboardingStatus !== undefined) updateData.onboardingStatus = body.onboardingStatus;
+        
+        // Checklist fields
+        if (body.linkedinUpdated !== undefined) updateData.linkedinUpdated = body.linkedinUpdated;
+        if (body.profilePictureUpdated !== undefined) updateData.profilePictureUpdated = body.profilePictureUpdated;
+        if (body.teamBioProvided !== undefined) updateData.teamBioProvided = body.teamBioProvided;
+        if (body.teamBio !== undefined) updateData.teamBio = body.teamBio;
+        if (body.teamImageS3Key !== undefined) updateData.teamImageS3Key = body.teamImageS3Key;
 
         // Update the user
         const updatedUser = await updateUser(id, {

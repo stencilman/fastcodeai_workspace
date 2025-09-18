@@ -17,16 +17,31 @@ function calculateProfileCompletion(user: { [key: string]: unknown }): number {
         'linkedinProfile',
         'bloodGroup'
     ];
-
-    // Count filled fields
-    const filledFields = requiredFields.filter(field =>
+    
+    // Define checklist items
+    const checklistItems = [
+        'linkedinUpdated',
+        'profilePictureUpdated',
+        'teamBioProvided'
+    ];
+    
+    // Count filled profile fields
+    const filledProfileFields = requiredFields.filter(field =>
         user[field] !== undefined &&
         user[field] !== null &&
         user[field] !== ''
     ).length;
-
-    // Calculate percentage
-    return Math.round((filledFields / requiredFields.length) * 100);
+    
+    // Count completed checklist items
+    const completedChecklistItems = checklistItems.filter(item =>
+        user[item] === true
+    ).length;
+    
+    // Calculate percentage (profile fields + checklist items)
+    const totalItems = requiredFields.length + checklistItems.length;
+    const completedItems = filledProfileFields + completedChecklistItems;
+    
+    return Math.round((completedItems / totalItems) * 100);
 }
 
 // Get dashboard data for the current user

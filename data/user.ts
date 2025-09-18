@@ -8,6 +8,39 @@ import {
   OnboardingStatus,
 } from "@/models/user";
 
+// Helper function to convert Prisma User to App User
+const mapPrismaUserToAppUser = (user: any): User => {
+  return {
+    id: user.id,
+    email: user.email || "",
+    name: user.name || "",
+    phone: user.phone || "",
+    address: user.address || "",
+    role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
+    onboardingStatus:
+      (user.onboardingStatus as any) || OnboardingStatus.IN_PROGRESS,
+    tourCompleted: user.tourCompleted || false,
+    slackUserId: user.slackUserId || undefined,
+    linkedinProfile: user.linkedinProfile || undefined,
+    bloodGroup: user.bloodGroup as any,
+    
+    // Checklist fields
+    linkedinUpdated: user.linkedinUpdated || false,
+    profilePictureUpdated: user.profilePictureUpdated || false,
+    teamBioProvided: user.teamBioProvided || false,
+    teamBio: user.teamBio || undefined,
+    teamImageS3Key: user.teamImageS3Key || undefined,
+    
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    firstName: user.firstName || undefined,
+    lastName: user.lastName || undefined,
+    emailVerified: user.emailVerified || undefined,
+    password: user.password || undefined,
+    image: user.image || undefined,
+  };
+};
+
 /**
  * Get a user by their email address
  */
@@ -19,27 +52,7 @@ export const getUserByEmail = async (email: string): Promise<User | null> => {
 
     if (!user) return null;
 
-    return {
-      id: user.id,
-      email: user.email || "",
-      name: user.name || "",
-      phone: user.phone || "",
-      address: user.address || "",
-      role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
-      onboardingStatus:
-        (user.onboardingStatus as any) || OnboardingStatus.IN_PROGRESS,
-      tourCompleted: user.tourCompleted || false,
-      slackUserId: user.slackUserId || undefined,
-      linkedinProfile: user.linkedinProfile || undefined,
-      bloodGroup: user.bloodGroup as any,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      firstName: user.firstName || undefined,
-      lastName: user.lastName || undefined,
-      emailVerified: user.emailVerified || undefined,
-      password: user.password || undefined,
-      image: user.image || undefined,
-    };
+    return mapPrismaUserToAppUser(user);
   } catch (error) {
     console.error("Error fetching user by email:", error);
     return null;
@@ -57,27 +70,7 @@ export const getUserById = async (id: string): Promise<User | null> => {
 
     if (!user) return null;
 
-    return {
-      id: user.id,
-      email: user.email || "",
-      name: user.name || "",
-      phone: user.phone || "",
-      address: user.address || "",
-      role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
-      onboardingStatus:
-        (user.onboardingStatus as any) || OnboardingStatus.IN_PROGRESS,
-      tourCompleted: user.tourCompleted || false,
-      slackUserId: user.slackUserId || undefined,
-      linkedinProfile: user.linkedinProfile || undefined,
-      bloodGroup: user.bloodGroup as any,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      firstName: user.firstName || undefined,
-      lastName: user.lastName || undefined,
-      emailVerified: user.emailVerified || undefined,
-      password: user.password || undefined,
-      image: user.image || undefined,
-    };
+    return mapPrismaUserToAppUser(user);
   } catch (error) {
     console.error("Error fetching user by ID:", error);
     return null;
@@ -114,27 +107,7 @@ export const createUser = async (
       },
     });
 
-    return {
-      id: user.id,
-      email: user.email || "",
-      name: user.name || "",
-      phone: user.phone || "",
-      address: user.address || "",
-      role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
-      onboardingStatus:
-        (user.onboardingStatus as any) || OnboardingStatus.IN_PROGRESS,
-      tourCompleted: user.tourCompleted || false,
-      slackUserId: user.slackUserId || undefined,
-      linkedinProfile: user.linkedinProfile || undefined,
-      bloodGroup: user.bloodGroup as any,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      firstName: user.firstName || undefined,
-      lastName: user.lastName || undefined,
-      emailVerified: user.emailVerified || undefined,
-      password: user.password || undefined,
-      image: user.image || undefined,
-    };
+    return mapPrismaUserToAppUser(user);
   } catch (error) {
     console.error("Error creating user:", error);
     throw error;
@@ -168,6 +141,18 @@ export const updateUser = async (
       updateData.onboardingStatus = data.onboardingStatus;
     if (data.tourCompleted !== undefined)
       updateData.tourCompleted = data.tourCompleted;
+      
+    // Checklist fields
+    if (data.linkedinUpdated !== undefined)
+      updateData.linkedinUpdated = data.linkedinUpdated;
+    if (data.profilePictureUpdated !== undefined)
+      updateData.profilePictureUpdated = data.profilePictureUpdated;
+    if (data.teamBioProvided !== undefined)
+      updateData.teamBioProvided = data.teamBioProvided;
+    if (data.teamBio !== undefined)
+      updateData.teamBio = data.teamBio;
+    if (data.teamImageS3Key !== undefined)
+      updateData.teamImageS3Key = data.teamImageS3Key;
 
     // Handle BloodGroup enum conversion
     if (data.bloodGroup !== undefined) {
@@ -204,27 +189,7 @@ export const updateUser = async (
       data: updateData,
     });
 
-    return {
-      id: user.id,
-      email: user.email || "",
-      name: user.name || "",
-      phone: user.phone || "",
-      address: user.address || "",
-      role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
-      onboardingStatus:
-        (user.onboardingStatus as any) || OnboardingStatus.IN_PROGRESS,
-      tourCompleted: user.tourCompleted || false,
-      slackUserId: user.slackUserId || undefined,
-      linkedinProfile: user.linkedinProfile || undefined,
-      bloodGroup: user.bloodGroup as any,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      firstName: user.firstName || undefined,
-      lastName: user.lastName || undefined,
-      emailVerified: user.emailVerified || undefined,
-      password: user.password || undefined,
-      image: user.image || undefined,
-    };
+    return mapPrismaUserToAppUser(user);
   } catch (error) {
     console.error("Error updating user:", error);
     throw error;
@@ -240,27 +205,7 @@ export const deleteUser = async (id: string): Promise<User> => {
       where: { id },
     });
 
-    return {
-      id: user.id,
-      email: user.email || "",
-      name: user.name || "",
-      phone: user.phone || "",
-      address: user.address || "",
-      role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
-      onboardingStatus:
-        (user.onboardingStatus as any) || OnboardingStatus.IN_PROGRESS,
-      tourCompleted: user.tourCompleted || false,
-      slackUserId: user.slackUserId || undefined,
-      linkedinProfile: user.linkedinProfile || undefined,
-      bloodGroup: user.bloodGroup as any,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      firstName: user.firstName || undefined,
-      lastName: user.lastName || undefined,
-      emailVerified: user.emailVerified || undefined,
-      password: user.password || undefined,
-      image: user.image || undefined,
-    };
+    return mapPrismaUserToAppUser(user);
   } catch (error) {
     console.error("Error deleting user:", error);
     throw error;
@@ -276,27 +221,7 @@ export const getAllUsers = async (): Promise<User[]> => {
       orderBy: { createdAt: "desc" },
     });
 
-    return users.map((user) => ({
-      id: user.id,
-      email: user.email || "",
-      name: user.name || "",
-      phone: user.phone || "",
-      address: user.address || "",
-      role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
-      onboardingStatus:
-        (user.onboardingStatus as any) || OnboardingStatus.IN_PROGRESS,
-      tourCompleted: user.tourCompleted || false,
-      slackUserId: user.slackUserId || undefined,
-      linkedinProfile: user.linkedinProfile || undefined,
-      bloodGroup: user.bloodGroup as any,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      firstName: user.firstName || undefined,
-      lastName: user.lastName || undefined,
-      emailVerified: user.emailVerified || undefined,
-      password: user.password || undefined,
-      image: user.image || undefined,
-    }));
+    return users.map(mapPrismaUserToAppUser);
   } catch (error) {
     console.error("Error fetching all users:", error);
     throw error;
@@ -315,27 +240,7 @@ export const getUsersByRole = async (role: UserRole): Promise<User[]> => {
       orderBy: { createdAt: "desc" },
     });
 
-    return users.map((user) => ({
-      id: user.id,
-      email: user.email || "",
-      name: user.name || "",
-      phone: user.phone || "",
-      address: user.address || "",
-      role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
-      onboardingStatus:
-        (user.onboardingStatus as any) || OnboardingStatus.IN_PROGRESS,
-      tourCompleted: user.tourCompleted || false,
-      slackUserId: user.slackUserId || undefined,
-      linkedinProfile: user.linkedinProfile || undefined,
-      bloodGroup: user.bloodGroup as any,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      firstName: user.firstName || undefined,
-      lastName: user.lastName || undefined,
-      emailVerified: user.emailVerified || undefined,
-      password: user.password || undefined,
-      image: user.image || undefined,
-    }));
+    return users.map(mapPrismaUserToAppUser);
   } catch (error) {
     console.error(`Error fetching users by role ${role}:`, error);
     throw error;
@@ -357,27 +262,7 @@ export const searchUsers = async (query: string): Promise<User[]> => {
       orderBy: { createdAt: "desc" },
     });
 
-    return users.map((user) => ({
-      id: user.id,
-      email: user.email || "",
-      name: user.name || "",
-      phone: user.phone || "",
-      address: user.address || "",
-      role: user.role === "ADMIN" ? UserRole.ADMIN : UserRole.USER,
-      onboardingStatus:
-        (user.onboardingStatus as any) || OnboardingStatus.IN_PROGRESS,
-      tourCompleted: user.tourCompleted || false,
-      slackUserId: user.slackUserId || undefined,
-      linkedinProfile: user.linkedinProfile || undefined,
-      bloodGroup: user.bloodGroup as any,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      firstName: user.firstName || undefined,
-      lastName: user.lastName || undefined,
-      emailVerified: user.emailVerified || undefined,
-      password: user.password || undefined,
-      image: user.image || undefined,
-    }));
+    return users.map(mapPrismaUserToAppUser);
   } catch (error) {
     console.error("Error searching users:", error);
     throw error;

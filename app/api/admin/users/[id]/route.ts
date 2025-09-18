@@ -3,6 +3,9 @@ import { getUserById, updateUser } from "@/data/user";
 import { UpdateUserInput } from "@/models/user";
 import { auth } from "@/auth";
 import { db } from '@/lib/db';
+import { S3Service } from '@/lib/s3-service';
+
+const s3Service = new S3Service();
 
 // GET endpoint to fetch user details (admin only)
 export async function GET(
@@ -12,28 +15,42 @@ export async function GET(
   const { id } = await params;
   const session = await auth();
 
-   // Check if user is authenticated and is an admin
-   if (!session?.user?.email) {
+  // Check if user is authenticated and is an admin
+  if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-}
+  }
 
   try {
-     // Get current user to verify admin role
-     const currentUser = await db.user.findUnique({
+    // Get current user to verify admin role
+    const currentUser = await db.user.findUnique({
       where: { email: session.user.email },
-  });
+    });
     // Check if the current user is an admin
     if (!currentUser || currentUser.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
-  }
+    }
 
     const user = await getUserById(id);
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
+    
+    // Add team image URL if available
+    let teamImageUrl = null;
+    if (user.teamImageS3Key) {
+      try {
+        teamImageUrl = await s3Service.getPresignedDownloadUrl(user.teamImageS3Key);
+      } catch (error) {
+        console.error('Error generating presigned URL for team image:', error);
+        // Continue without the image URL
+      }
+    }
 
-    return NextResponse.json(user);
+    return NextResponse.json({
+      ...user,
+      teamImageUrl,
+    });
   } catch (error) {
     console.error("Error fetching user:", error);
     return NextResponse.json(
@@ -52,15 +69,15 @@ export async function PATCH(
   const session = await auth();
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-}
+  }
   try {
     // Check if the current user is an admin
     const currentUser = await db.user.findUnique({
       where: { email: session.user.email },
-  });
+    });
     if (!currentUser || currentUser.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
-  }
+    }
 
     const body = await request.json();
 

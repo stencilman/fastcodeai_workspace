@@ -11,6 +11,7 @@ import { AdminProfileDetailsForm } from "@/components/admin/users/admin-profile-
 import { Button } from "@/components/ui/button";
 import { getDisplayBloodGroup } from "@/lib/utils/utils";
 import { OnboardingStatusSection } from "@/components/admin/users/onboarding-status-section";
+import { UserChecklistView } from "@/components/admin/users/user-checklist-view";
 import { toast } from "sonner";
 
 export function GeneralDetailsTab() {
@@ -240,6 +241,9 @@ export function GeneralDetailsTab() {
                     <p>{formatDate(user?.updatedAt)}</p>
                   </div>
                 </div>
+                
+                {/* User Checklist View */}
+                <UserChecklistView user={user} />
               </>
             )}
           </div>
