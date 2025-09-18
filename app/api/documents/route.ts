@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { S3Service } from '@/lib/s3-service';
 import { DocumentType, DocumentStatus } from '@/models/document';
+import { createDocumentUploadedNotification } from '@/data/notification-service';
 
 const s3Service = new S3Service();
 
@@ -118,6 +119,20 @@ export async function POST(req: NextRequest) {
 
         // Generate presigned upload URL
         const uploadUrl = await s3Service.getPresignedUploadUrl(s3Key, fileType);
+
+        // Create notification for admins
+        try {
+            await createDocumentUploadedNotification(
+                document.id,
+                docType as DocumentType,
+                user.name!,
+                user.id // Pass the user ID for the related link
+            );
+            console.log('Document upload notification created successfully');
+        } catch (notificationError) {
+            console.error('Error creating notification:', notificationError);
+            // Don't fail the request if notification creation fails
+        }
 
         return NextResponse.json({ document, uploadUrl });
     } catch (error) {

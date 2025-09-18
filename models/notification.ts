@@ -11,9 +11,9 @@ export interface Notification {
   isRead: boolean;
   createdAt: Date;
   updatedAt: Date;
-  documentId?: string;
-  documentType?: DocumentType;
-  relatedLink?: string;
+  documentId?: string | null;   // ID of the document related to this notification
+  documentType?: DocumentType | null; // Type of document from DocumentType enum
+  relatedLink?: string | null;  // URL to navigate to when clicking the notification
 }
 
 export interface CreateNotificationInput {
@@ -21,9 +21,9 @@ export interface CreateNotificationInput {
   title: string;
   message: string;
   type: NotificationType;
-  documentId?: string;
-  documentType?: DocumentType;
-  relatedLink?: string;
+  documentId?: string | null;
+  documentType?: DocumentType | null;
+  relatedLink?: string | null;
 }
 
 export interface UpdateNotificationInput {
@@ -34,4 +34,5 @@ export interface UpdateNotificationInput {
 export interface NotificationResponse {
   notifications: Notification[];
   unreadCount: number;
+  totalCount: number;
 }

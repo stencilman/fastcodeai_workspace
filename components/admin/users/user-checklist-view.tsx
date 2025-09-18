@@ -242,9 +242,9 @@ export function UserChecklistView({ user }: UserChecklistViewProps) {
                 </div>
 
                 {/* Bio Text */}
-                <div className="flex-grow">
+                <div className="flex-grow max-w-full">
                   <h4 className="text-sm font-medium mb-2">Bio</h4>
-                  <p className="text-sm">
+                  <p className="text-sm break-words whitespace-normal overflow-wrap-anywhere w-full">
                     {teamBio}
                   </p>
                 </div>

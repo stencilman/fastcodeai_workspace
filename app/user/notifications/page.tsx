@@ -3,10 +3,10 @@
 import { useNotifications } from '@/contexts/notification-context';
 import { NotificationItem } from '@/components/notifications/notification-item';
 import { Button } from '@/components/ui/button';
-import { BellOff } from 'lucide-react';
+import { BellOff, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 
 export default function UserNotificationsPage() {
-  const { notifications, markAllAsRead, unreadCount } = useNotifications();
+  const { notifications, markAllAsRead, unreadCount, isLoading, isError, error, refetchNotifications } = useNotifications();
   
   // Filter notifications for the current user (non-admin notifications)
   const userNotifications = notifications.filter(
@@ -43,7 +43,27 @@ export default function UserNotificationsPage() {
           <h2 className="font-medium">Recent Activity</h2>
         </div>
         
-        {userNotifications.length === 0 ? (
+        {isLoading ? (
+          <div className="p-12 text-center text-gray-500 flex flex-col items-center">
+            <Loader2 className="h-12 w-12 text-gray-300 mb-3 animate-spin" />
+            <p className="font-medium mb-1">Loading notifications...</p>
+            <p className="text-sm text-muted-foreground">Please wait while we fetch your notifications</p>
+          </div>
+        ) : isError ? (
+          <div className="p-12 text-center text-gray-500 flex flex-col items-center">
+            <AlertCircle className="h-12 w-12 text-red-300 mb-3" />
+            <p className="text-red-500 font-medium mb-1">Failed to load notifications</p>
+            <p className="text-sm text-muted-foreground mb-4">There was an error loading your notifications</p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-1"
+              onClick={() => refetchNotifications()}
+            >
+              <RefreshCw className="h-4 w-4" /> Try again
+            </Button>
+          </div>
+        ) : userNotifications.length === 0 ? (
           <div className="p-12 text-center text-gray-500 flex flex-col items-center">
             <BellOff className="h-12 w-12 text-gray-300 mb-3" />
             <p className="font-medium mb-1">No notifications</p>

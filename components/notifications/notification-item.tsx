@@ -40,9 +40,11 @@ export function NotificationItem({
   };
 
   return (
-    <div
+    <Link
+      href={notification.relatedLink || "#"}
+      onClick={handleClick}
       className={cn(
-        "block px-4 py-3 hover:bg-gray-50 border-b last:border-b-0",
+        "block px-4 py-3 hover:bg-gray-50 border-b last:border-b-0 relative",
         !notification.isRead ? "bg-blue-50" : "",
         className
       )}
@@ -51,24 +53,20 @@ export function NotificationItem({
         <div className="flex-shrink-0 mt-1">{icons[notification.type]}</div>
         <div className="flex-grow">
           <div className="flex justify-between items-start">
-            <Link
-              href={notification.relatedLink || "#"}
-              onClick={handleClick}
-              className="block"
-            >
-              <p className="text-sm font-medium">{notification.title}</p>
-            </Link>
+            <p className="text-sm font-medium">{notification.title}</p>
 
             {showActions && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
-                onClick={handleDelete}
-              >
-                <Trash2 className="h-4 w-4" />
-                <span className="sr-only">Delete</span>
-              </Button>
+              <div className="absolute top-2 right-2 z-10">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
+                  onClick={handleDelete}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="sr-only">Delete</span>
+                </Button>
+              </div>
             )}
           </div>
 
@@ -80,6 +78,6 @@ export function NotificationItem({
           </p>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

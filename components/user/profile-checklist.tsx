@@ -48,7 +48,9 @@ export function ProfileChecklist({ userId }: ProfileChecklistProps) {
   const [initialTeamBio, setInitialTeamBio] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [initialImagePreview, setInitialImagePreview] = useState<string | null>(null);
+  const [initialImagePreview, setInitialImagePreview] = useState<string | null>(
+    null
+  );
 
   // Image preview dialog states
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -79,7 +81,7 @@ export function ProfileChecklist({ userId }: ProfileChecklistProps) {
       const bio = checklistData.teamBio || "";
       setTeamBio(bio);
       setInitialTeamBio(bio);
-      
+
       if (checklistData.teamImageUrl) {
         setImagePreview(checklistData.teamImageUrl);
         setInitialImagePreview(checklistData.teamImageUrl);
@@ -157,11 +159,29 @@ export function ProfileChecklist({ userId }: ProfileChecklistProps) {
 
   const handleSaveBio = () => {
     // Save the bio to the API
-    updateChecklistMutation.mutate({ teamBio });
+    updateChecklistMutation.mutate({ teamBio }, {
+      onSuccess: () => {
+        // Update the initial state to match the current state
+        setInitialTeamBio(teamBio);
+        
+        // Show success message
+        toast.success("Bio updated successfully");
+      }
+    });
 
     // If there's a new image file, upload it
     if (imageFile) {
-      uploadImageMutation.mutate(imageFile);
+      uploadImageMutation.mutate(imageFile, {
+        onSuccess: () => {
+          // Update the initial state to match the current state
+          if (imagePreview) {
+            setInitialImagePreview(imagePreview);
+          }
+          
+          // Show success message
+          toast.success("Profile image updated successfully");
+        }
+      });
     }
   };
 
@@ -204,9 +224,9 @@ export function ProfileChecklist({ userId }: ProfileChecklistProps) {
             at Fast Code AI
           </p>
           <div className="mt-2">
-            <a 
-              href="https://www.linkedin.com/in/me/edit/forms/position/new/" 
-              target="_blank" 
+            <a
+              href="https://www.linkedin.com/in/me/edit/forms/position/new/"
+              target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
             >
@@ -241,18 +261,18 @@ export function ProfileChecklist({ userId }: ProfileChecklistProps) {
             Please use a professional profile picture on your Gmail and Slack
           </p>
           <div className="mt-2 space-y-1">
-            <a 
-              href="https://support.google.com/mail/answer/35529?hl=en&co=GENIE.Platform%3DDesktop" 
-              target="_blank" 
+            <a
+              href="https://support.google.com/mail/answer/35529?hl=en&co=GENIE.Platform%3DDesktop"
+              target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
             >
               <ExternalLink className="h-3 w-3 mr-1" />
               How to change Gmail profile picture
             </a>
-            <a 
-              href="https://slack.com/help/articles/115005506003-Upload-a-profile-photo" 
-              target="_blank" 
+            <a
+              href="https://slack.com/help/articles/115005506003-Upload-a-profile-photo"
+              target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
             >
@@ -274,9 +294,9 @@ export function ProfileChecklist({ userId }: ProfileChecklistProps) {
           the teams page on the main website
         </p>
         <div className="mb-4">
-          <a 
-            href="https://www.fastcode.ai/team" 
-            target="_blank" 
+          <a
+            href="https://www.fastcode.ai/team"
+            target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
           >
@@ -286,10 +306,9 @@ export function ProfileChecklist({ userId }: ProfileChecklistProps) {
         </div>
 
         <div className="space-y-4">
-          {/* Image Upload and Bio in a responsive layout - stacked on mobile, side-by-side on larger screens */}
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-3">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-3 w-full">
             {/* Image Upload */}
-            <div className="flex-shrink-0 w-full sm:w-auto flex flex-col items-center">
+            <div className="flex-shrink-0 w-full sm:w-[100px] flex flex-col items-center">
               {imagePreview ? (
                 <div className="flex flex-col items-center gap-2">
                   <div
@@ -346,12 +365,14 @@ export function ProfileChecklist({ userId }: ProfileChecklistProps) {
             </div>
 
             {/* Bio Text */}
-            <div className="w-full flex-grow space-y-2">
+            <div className="w-full flex-grow space-y-2 sm:max-w-[calc(100%-120px)]">
               <div className="flex justify-between items-center">
                 <Label htmlFor="team-bio" className="text-sm font-medium">
                   Short Bio
                 </Label>
-                <span className="text-xs text-muted-foreground">{teamBio.length}/200</span>
+                <span className="text-xs text-muted-foreground">
+                  {teamBio.length}/200
+                </span>
               </div>
               <Textarea
                 id="team-bio"
@@ -359,8 +380,8 @@ export function ProfileChecklist({ userId }: ProfileChecklistProps) {
                 value={teamBio}
                 onChange={handleBioChange}
                 maxLength={200}
-                className="resize-none"
-                rows={4}
+                className="resize-none h-28 sm:h-24 min-h-[112px] sm:min-h-[96px] max-h-[112px] sm:max-h-[96px] overflow-y-auto w-full break-words"
+                rows={5}
               />
               <div className="text-xs text-muted-foreground">
                 <span>
@@ -448,7 +469,7 @@ export function ProfileChecklist({ userId }: ProfileChecklistProps) {
               )
             )}
           </div>
-          
+
           {/* Footer with Open in new tab button - visible only on small screens */}
           <DialogFooter className="mt-4 sm:hidden">
             {imagePreview && (

@@ -34,9 +34,11 @@ export default function RootLayout({
       >
         <Suspense fallback={null}>
           <SessionProvider>
-            <NotificationProvider>
-              <TanStackQueryProvider>{children}</TanStackQueryProvider>
-            </NotificationProvider>
+            <TanStackQueryProvider>
+              <NotificationProvider>
+                {children}
+              </NotificationProvider>
+            </TanStackQueryProvider>
           </SessionProvider>
         </Suspense>
         <Toaster position="top-right" />

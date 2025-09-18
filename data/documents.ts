@@ -1,5 +1,6 @@
 import { Document, DocumentStatus, DocumentType } from "@/models/document";
 import { db } from "@/lib/db";
+import { createDocumentStatusNotification } from "@/data/notification-service";
 
 // Get all documents for a user
 export async function getUserDocuments(userId: string) {
@@ -84,6 +85,29 @@ export async function updateDocumentStatus(
             where: { id },
             data: updateData,
         });
+
+        // Create notification for the document owner
+        try {
+            // Get the document with user information
+            const documentWithUser = await db.document.findUnique({
+                where: { id },
+                include: { user: true },
+            });
+
+            if (documentWithUser && documentWithUser.user) {
+                await createDocumentStatusNotification(
+                    documentWithUser.userId,
+                    id,
+                    documentWithUser.type as DocumentType,
+                    status === DocumentStatus.APPROVED
+                );
+                console.log('Document status notification created successfully');
+            }
+        } catch (notificationError) {
+            console.error('Error creating document status notification:', notificationError);
+            // Don't fail the request if notification creation fails
+        }
+
         return document;
     } catch (error) {
         console.error("Error updating document status:", error);

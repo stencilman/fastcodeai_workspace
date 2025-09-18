@@ -4,7 +4,7 @@ import { NotificationItem } from './notification-item';
 import { useNotifications } from '@/contexts/notification-context';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { BellOff } from 'lucide-react';
+import { BellOff, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { UserRole } from '@prisma/client';
 
@@ -13,7 +13,7 @@ interface NotificationDropdownProps {
 }
 
 export function NotificationDropdown({ maxItems = 5 }: NotificationDropdownProps) {
-  const { notifications, markAllAsRead, unreadCount } = useNotifications();
+  const { notifications, markAllAsRead, unreadCount, isLoading, isError, error, refetchNotifications } = useNotifications();
   const { data: session } = useSession();
   
   // Determine if user is admin
@@ -40,7 +40,25 @@ export function NotificationDropdown({ maxItems = 5 }: NotificationDropdownProps
       </div>
       
       <div className="flex-1">
-        {recentNotifications.length === 0 ? (
+        {isLoading ? (
+          <div className="p-8 text-center text-gray-500 flex flex-col items-center">
+            <Loader2 className="h-8 w-8 text-gray-300 mb-2 animate-spin" />
+            <p>Loading notifications...</p>
+          </div>
+        ) : isError ? (
+          <div className="p-8 text-center text-gray-500 flex flex-col items-center">
+            <AlertCircle className="h-8 w-8 text-red-300 mb-2" />
+            <p className="text-red-500 font-medium">Failed to load notifications</p>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="mt-2 text-xs flex items-center gap-1"
+              onClick={() => refetchNotifications()}
+            >
+              <RefreshCw className="h-3 w-3" /> Try again
+            </Button>
+          </div>
+        ) : recentNotifications.length === 0 ? (
           <div className="p-8 text-center text-gray-500 flex flex-col items-center">
             <BellOff className="h-8 w-8 text-gray-300 mb-2" />
             <p>No notifications</p>
