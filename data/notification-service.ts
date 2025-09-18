@@ -5,31 +5,61 @@ import { Notification as NotificationModel } from "@/models/notification";
 import { Prisma } from "@prisma/client";
 
 /**
- * Get notifications for a specific user
+ * Get notifications for a specific user with pagination
  */
-export async function getNotifications(userId: string): Promise<NotificationModel[]> {
+export async function getNotifications(
+    userId: string,
+    page: number = 1,
+    pageSize: number = 10,
+    cursor?: string
+): Promise<{ notifications: NotificationModel[]; nextCursor: string | null; hasMore: boolean }> {
     try {
         // Check if the Prisma client has been updated with the notification model
         if (!db.notification) {
             console.warn("Prisma client does not have notification model yet. Using mock data.");
-            return [];
+            return { notifications: [], nextCursor: null, hasMore: false };
         }
 
-        const notifications = await db.notification.findMany({
-            where: {
-                userId,
-            },
-            orderBy: {
-                createdAt: "desc",
-            },
-        });
+        // Calculate how many items to skip if using page-based pagination
+        const skip = cursor ? undefined : (page - 1) * pageSize;
 
-        return notifications.map(notification => ({
-            ...notification,
-            createdAt: notification.createdAt,
-            updatedAt: notification.updatedAt,
-            documentType: notification.documentType as unknown as DocumentType,
-        }));
+        // Build the query
+        const query: Prisma.NotificationFindManyArgs = {
+            where: { userId },
+            orderBy: { createdAt: "desc" },
+            take: pageSize + 1, // Take one extra to check if there are more items
+        };
+
+        // Add cursor-based pagination if a cursor is provided
+        if (cursor) {
+            query.cursor = { id: cursor };
+            query.skip = 1; // Skip the cursor itself
+        } else if (skip) {
+            query.skip = skip;
+        }
+
+        // Execute the query
+        const notifications = await db.notification.findMany(query);
+
+        // Check if there are more items
+        const hasMore = notifications.length > pageSize;
+        
+        // Remove the extra item we used to check for more
+        const paginatedNotifications = hasMore ? notifications.slice(0, pageSize) : notifications;
+        
+        // Get the ID of the last item for the next cursor
+        const nextCursor = hasMore ? paginatedNotifications[paginatedNotifications.length - 1].id : null;
+
+        return {
+            notifications: paginatedNotifications.map(notification => ({
+                ...notification,
+                createdAt: notification.createdAt,
+                updatedAt: notification.updatedAt,
+                documentType: notification.documentType as unknown as DocumentType,
+            })),
+            nextCursor,
+            hasMore,
+        };
     } catch (error) {
         console.error("Error fetching notifications:", error);
         throw new Error("Failed to fetch notifications");

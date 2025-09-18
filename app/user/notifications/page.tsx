@@ -3,15 +3,58 @@
 import { useNotifications } from '@/contexts/notification-context';
 import { NotificationItem } from '@/components/notifications/notification-item';
 import { Button } from '@/components/ui/button';
-import { BellOff, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
+import { BellOff, AlertCircle, Loader2, RefreshCw, ChevronDown } from 'lucide-react';
+import { useEffect, useRef, useCallback } from 'react';
 
 export default function UserNotificationsPage() {
-  const { notifications, markAllAsRead, unreadCount, isLoading, isError, error, refetchNotifications } = useNotifications();
+  const { 
+    notifications, 
+    markAllAsRead, 
+    unreadCount, 
+    isLoading, 
+    isError, 
+    error, 
+    refetchNotifications,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useNotifications();
   
   // Filter notifications for the current user (non-admin notifications)
   const userNotifications = notifications.filter(
     notification => notification.type !== 'document_uploaded'
   );
+  
+  // Intersection observer for infinite scrolling
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage]
+  );
+
+  useEffect(() => {
+    const element = observerTarget.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(handleObserver, {
+      root: null,
+      rootMargin: "0px",
+      threshold: 1.0,
+    });
+
+    observer.observe(element);
+
+    return () => {
+      observer.unobserve(element);
+      observer.disconnect();
+    };
+  }, [handleObserver]);
   
   return (
     <>
@@ -70,15 +113,39 @@ export default function UserNotificationsPage() {
             <p className="text-sm text-muted-foreground">You don't have any notifications at the moment</p>
           </div>
         ) : (
-          <div className="divide-y">
-            {userNotifications.map(notification => (
-              <NotificationItem 
-                key={notification.id} 
-                notification={notification}
-                showActions={true}
-              />
-            ))}
-          </div>
+          <>
+            <div className="divide-y">
+              {userNotifications.map(notification => (
+                <NotificationItem 
+                  key={notification.id} 
+                  notification={notification}
+                  showActions={true}
+                />
+              ))}
+            </div>
+            
+            {/* Loading indicator for infinite scroll */}
+            <div ref={observerTarget} className="py-4 flex justify-center">
+              {isFetchingNextPage ? (
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                  <span className="text-sm text-gray-500">Loading more...</span>
+                </div>
+              ) : hasNextPage ? (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => fetchNextPage()}
+                  className="text-sm text-gray-500 flex items-center gap-1"
+                >
+                  <ChevronDown className="h-4 w-4" />
+                  Load more
+                </Button>
+              ) : userNotifications.length > 0 ? (
+                <span className="text-sm text-gray-500">No more notifications</span>
+              ) : null}
+            </div>
+          </>
         )}
       </div>
     </>
