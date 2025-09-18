@@ -22,6 +22,8 @@ import MobileNav from "./mobile-nav";
 import { handleSignOut } from "@/actions/signout";
 import { useSession } from "next-auth/react";
 import { UserRole } from "@prisma/client";
+import { NotificationBell } from "@/components/notifications/notification-bell";
+import { NotificationDropdown } from "@/components/notifications/notification-dropdown";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -101,8 +103,27 @@ export default function Navbar() {
           <span className="text-lg font-semibold">FastCodeAI Day One</span>
         </Link>
       </div>
-
-      <DropdownMenu>
+      
+      <div className="flex items-center gap-3">
+        {/* Notification Bell */}
+        {session?.user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="rounded-full p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                aria-label="Notifications"
+              >
+                <NotificationBell />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="p-0 w-80">
+              <NotificationDropdown />
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+        
+        {/* User Profile Menu */}
+        <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
             className="rounded-full border bg-muted/40 hover:bg-muted outline-none focus-visible:ring overflow-hidden"
@@ -141,6 +162,7 @@ export default function Navbar() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      </div>
     </header>
   );
 }

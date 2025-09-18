@@ -4,7 +4,8 @@ import {
     FileText,
     User,
     IndianRupee,
-    Calendar
+    Calendar,
+    Bell
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -35,6 +36,11 @@ export const adminRoutes: Route[] = [
         label: "Profile",
         href: "/admin/profile",
         icon: User,
+    },
+    {
+        label: "Notifications",
+        href: "/admin/notifications",
+        icon: Bell,
     },
 ];
 
@@ -69,5 +75,10 @@ export const userRoutes: Route[] = [
         href: "https://expense.fastcode.ai/auth/login",
         icon: IndianRupee,
         external: true,
+    },
+    {
+        label: "Notifications",
+        href: "/user/notifications",
+        icon: Bell,
     },
 ];
