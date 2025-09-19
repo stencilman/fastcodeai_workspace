@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { S3Service } from '@/lib/s3-service';
 import { DocumentType, DocumentStatus } from '@/models/document';
 import { createDocumentUploadedNotification } from '@/data/notification-service';
+import { sendDocumentSubmissionEmail, formatDateForEmail } from '@/lib/email-service';
 
 const s3Service = new S3Service();
 
@@ -129,6 +130,32 @@ export async function POST(req: NextRequest) {
                 user.id // Pass the user ID for the related link
             );
             console.log('Document upload notification created successfully');
+
+            // Send email notification to admins
+            try {
+                // Find admin users
+                const adminUsers = await db.user.findMany({
+                    where: { role: 'ADMIN' }
+                });
+
+                // Send email to each admin
+                for (const admin of adminUsers) {
+                    if (admin.email) {
+                        await sendDocumentSubmissionEmail(admin.email, {
+                            user_name: user.name || 'User',
+                            user_email: user.email || '',
+                            document_type: docType,
+                            submission_date: formatDateForEmail(new Date()),
+                            file_name: fileName,
+                            review_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/users/${user.id}?tab=documents`
+                        });
+                    }
+                }
+                console.log('Document submission emails sent to admins');
+            } catch (emailError) {
+                console.error('Error sending email notifications:', emailError);
+                // Don't fail the request if email sending fails
+            }
         } catch (notificationError) {
             console.error('Error creating notification:', notificationError);
             // Don't fail the request if notification creation fails
